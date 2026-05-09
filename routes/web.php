@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Auth;
 
 // Public Routes
 Route::get('/', function () {
-    return view('welcome');
+    return view('main');
 })->name('home');
 
 // Guest Routes (only for unauthenticated users)

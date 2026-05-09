@@ -18,38 +18,62 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <!-- Livewire Styles -->
     @livewireStyles
 </head>
 
-<body class="font-sans antialiased ">
-    <div class="min-h-screen bg-cod-gray">
-        <!-- Navigation -->
-        <nav class="bg-cod-gray shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-                    <div class="flex items-center">
-                        <a href="{{ route('home') }}" class="text-xl font-bold text-platinum">WatchSense</a>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        @auth
-                            <a href="{{ route('profile') }}"
-                                class="text-platinum hover:text-gray-300 font-medium">{{ Auth::user()->name }}</a>
-                            <button type="button" id="logout-btn" class="text-platinum hover:text-gray-300">Logout</button>
-                            <form id="logout-form" method="POST" action="{{ route('logout') }}" class="hidden">
-                                @csrf
-                            </form>
-                        @else
-                            <a href="{{ route('login') }}" class="text-platinum hover:text-gray-300">Login</a>
-                            <a href="{{ route('register') }}" class="text-platinum hover:text-gray-300">Register</a>
-                        @endauth
-                    </div>
-                </div>
+<body class="font-sans antialiased">
+    <div class="min-h-screen bg-cod-gray flex">
+        <!-- Sidebar -->
+        <aside class="w-35 bg-[#131313] border-r border-off-black flex flex-col fixed h-screen">
+            <!-- Logo at Top -->
+            <div class="p-2.5 flex items-center gap-4">
+                <a href="{{ route('home') }}" class="text-xl text-center font-bold text-platinum">WatchSense</a>
             </div>
-        </nav>
+
+            <!-- Main Content (expands to fill space) -->
+            <nav class="flex-1 p-4">
+            </nav>
+
+            <!-- Footer at Bottom -->
+            <div class="p-4 border-t">
+                @auth
+                    <div class="space-y-2">
+                        <a href="{{ route('profile') }}" class="text-platinum hover:text-gray-300 transition">
+                            <div class="flex items-center justify-between bg-cod-gray rounded-lg p-3">
+                                <i class="fas fa-user text-lg"></i>
+                                <span class="text-platinum font-medium truncate text-sm">{{ Auth::user()->name }}</span>
+                            </div>
+                        </a>
+                        <br>
+                        <button type="button" id="logout-btn"
+                            class="w-full bg-platinum text-cod-gray py-2 px-3 rounded-lg hover:bg-ash transition font-medium text-sm">
+                            Logout
+                        </button>
+                        <form id="logout-form" method="POST" action="{{ route('logout') }}" class="hidden">
+                            @csrf
+                        </form>
+                    </div>
+                @else
+                    <div class="space-y-2">
+                        <a href="{{ route('login') }}"
+                            class="block w-full bg-platinum text-cod-gray py-2 px-3 rounded-lg hover:bg-ash transition font-medium text-center text-sm">
+                            Login
+                        </a>
+                        <a href="{{ route('register') }}"
+                            class="block w-full bg-ash text-cod-gray py-2 px-3 rounded-lg hover:bg-platinum transition font-medium text-center text-sm">
+                            Register
+                        </a>
+                    </div>
+                @endauth
+            </div>
+        </aside>
 
         <!-- Main Content -->
-        <main>
+        <main class="ml-52 flex-1">
             @yield('content')
         </main>
     </div>
