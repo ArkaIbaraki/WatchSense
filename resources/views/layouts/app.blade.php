@@ -14,7 +14,7 @@
 
     <!-- Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
+
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -33,7 +33,8 @@
                     </div>
                     <div class="flex items-center space-x-4">
                         @auth
-                            <a href="{{ route('profile') }}" class="text-platinum hover:text-gray-300 font-medium">{{ Auth::user()->name }}</a>
+                            <a href="{{ route('profile') }}"
+                                class="text-platinum hover:text-gray-300 font-medium">{{ Auth::user()->name }}</a>
                             <button type="button" id="logout-btn" class="text-platinum hover:text-gray-300">Logout</button>
                             <form id="logout-form" method="POST" action="{{ route('logout') }}" class="hidden">
                                 @csrf
@@ -55,7 +56,7 @@
 
     <!-- Livewire Scripts -->
     @livewireScripts
-    
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const logoutBtn = document.getElementById('logout-btn');

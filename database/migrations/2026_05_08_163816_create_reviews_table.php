@@ -15,7 +15,9 @@ return new class extends Migration
                   ->constrained('films')
                   ->onDelete('cascade');
 
-            $table->unsignedBigInteger('user_id');
+            $table->foreignId('user_id')
+                  ->constrained('users')
+                  ->onDelete('cascade');
 
             $table->integer('rating');
             $table->text('komentar');

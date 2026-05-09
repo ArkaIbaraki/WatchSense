@@ -5,13 +5,9 @@
         <!-- Email -->
         <div>
             <label for="email" class="block text-sm font-medium text-platinum">Email</label>
-            <input
-                type="email"
-                id="email"
-                wire:model="email"
+            <input type="email" id="email" wire:model="email"
                 class="mt-1 w-full px-4 py-2 bg-cod-gray border border-ash text-platinum rounded-lg shadow-sm focus:ring-platinum focus:border-platinum placeholder-ash"
-                placeholder="your@email.com"
-            />
+                placeholder="your@email.com" />
             @error('email')
                 <p class="mt-1 text-sm text-red-400">{{ $message }}</p>
             @enderror
@@ -20,13 +16,9 @@
         <!-- Password -->
         <div>
             <label for="password" class="block text-sm font-medium text-platinum">Password</label>
-            <input
-                type="password"
-                id="password"
-                wire:model="password"
+            <input type="password" id="password" wire:model="password"
                 class="mt-1 w-full px-4 py-2 bg-cod-gray border border-ash text-platinum rounded-lg shadow-sm focus:ring-platinum focus:border-platinum placeholder-ash"
-                placeholder="••••••••"
-            />
+                placeholder="••••••••" />
             @error('password')
                 <p class="mt-1 text-sm text-red-400">{{ $message }}</p>
             @enderror
@@ -34,20 +26,14 @@
 
         <!-- Remember Me -->
         <div class="flex items-center">
-            <input
-                type="checkbox"
-                id="remember"
-                wire:model="remember"
-                class="h-4 w-4 bg-cod-gray border-ash rounded checked:bg-platinum"
-            />
+            <input type="checkbox" id="remember" wire:model="remember"
+                class="h-4 w-4 bg-cod-gray border-ash rounded checked:bg-platinum" />
             <label for="remember" class="ml-2 block text-sm text-platinum">Remember me</label>
         </div>
 
         <!-- Submit Button -->
-        <button
-            type="submit"
-            class="w-full bg-platinum text-cod-gray py-2 px-4 rounded-lg hover:bg-ash transition font-medium"
-        >
+        <button type="submit"
+            class="w-full bg-platinum text-cod-gray py-2 px-4 rounded-lg hover:bg-ash transition font-medium">
             Sign In
         </button>
     </form>

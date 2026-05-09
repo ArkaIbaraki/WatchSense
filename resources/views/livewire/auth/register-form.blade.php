@@ -5,13 +5,9 @@
         <!-- Name -->
         <div>
             <label for="name" class="block text-sm font-medium text-platinum">Full Name</label>
-            <input
-                type="text"
-                id="name"
-                wire:model="name"
+            <input type="text" id="name" wire:model="name"
                 class="mt-1 w-full px-4 py-2 bg-cod-gray border border-ash text-platinum rounded-lg shadow-sm focus:ring-platinum focus:border-platinum placeholder-ash"
-                placeholder="John Doe"
-            />
+                placeholder="John Doe" />
             @error('name')
                 <p class="mt-1 text-sm text-red-400">{{ $message }}</p>
             @enderror
@@ -20,13 +16,9 @@
         <!-- Email -->
         <div>
             <label for="email" class="block text-sm font-medium text-platinum">Email</label>
-            <input
-                type="email"
-                id="email"
-                wire:model="email"
+            <input type="email" id="email" wire:model="email"
                 class="mt-1 w-full px-4 py-2 bg-cod-gray border border-ash text-platinum rounded-lg shadow-sm focus:ring-platinum focus:border-platinum placeholder-ash"
-                placeholder="your@email.com"
-            />
+                placeholder="your@email.com" />
             @error('email')
                 <p class="mt-1 text-sm text-red-400">{{ $message }}</p>
             @enderror
@@ -35,13 +27,9 @@
         <!-- Password -->
         <div>
             <label for="password" class="block text-sm font-medium text-platinum">Password</label>
-            <input
-                type="password"
-                id="password"
-                wire:model="password"
+            <input type="password" id="password" wire:model="password"
                 class="mt-1 w-full px-4 py-2 bg-cod-gray border border-ash text-platinum rounded-lg shadow-sm focus:ring-platinum focus:border-platinum placeholder-ash"
-                placeholder="••••••••"
-            />
+                placeholder="••••••••" />
             @error('password')
                 <p class="mt-1 text-sm text-red-400">{{ $message }}</p>
             @enderror
@@ -50,20 +38,14 @@
         <!-- Password Confirmation -->
         <div>
             <label for="password_confirmation" class="block text-sm font-medium text-platinum">Confirm Password</label>
-            <input
-                type="password"
-                id="password_confirmation"
-                wire:model="password_confirmation"
+            <input type="password" id="password_confirmation" wire:model="password_confirmation"
                 class="mt-1 w-full px-4 py-2 bg-cod-gray border border-ash text-platinum rounded-lg shadow-sm focus:ring-platinum focus:border-platinum placeholder-ash"
-                placeholder="••••••••"
-            />
+                placeholder="••••••••" />
         </div>
 
         <!-- Submit Button -->
-        <button
-            type="submit"
-            class="w-full bg-platinum text-cod-gray py-2 px-4 rounded-lg hover:bg-ash transition font-medium"
-        >
+        <button type="submit"
+            class="w-full bg-platinum text-cod-gray py-2 px-4 rounded-lg hover:bg-ash transition font-medium">
             Create Account
         </button>
     </form>
