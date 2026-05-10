@@ -88,7 +88,7 @@ class ImageGallery extends Component
                 if (isset($movie['genre_ids'])) {
                     $genres = array_map(function ($genreId) use ($genreMap) {
                         return $genreMap[$genreId] ?? 'Unknown';
-                    }, array_slice($movie['genre_ids'], 0, 2));
+                    }, array_slice($movie['genre_ids'], 0));
                 }
 
                 return [
