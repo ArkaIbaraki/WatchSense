@@ -3,7 +3,5 @@
 @section('title', 'Welcome')
 
 @section('content')
-    <div class="py-12 px-6">
-        @livewire('image-gallery')
-    </div>
+    @livewire('gallery-section')
 @endsection

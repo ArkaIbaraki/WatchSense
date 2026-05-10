@@ -2,11 +2,11 @@
     @if ($loading)
         <p class="text-platinum text-center py-12">Loading movies...</p>
     @else
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
             @forelse($movies as $movie)
                 <div class="bg-off-black rounded-lg overflow-hidden border border-ash hover:border-platinum transition">
                     <!-- Poster Image -->
-                    <div class="w-full aspect-square flex items-center justify-center overflow-hidden">
+                    <div class="w-full aspect-[2/3] flex items-center justify-center overflow-hidden">
                         @if ($movie['poster_url'] && $movie['poster_url'] != 'https://image.tmdb.org/t/p/w500')
                             <img src="{{ $movie['poster_url'] }}" alt="{{ $movie['title'] }}"
                                 class="w-full h-full object-cover">
@@ -16,7 +16,7 @@
                     </div>
 
                     <!-- Movie Info -->
-                    <div class="p-4 space-y-3">
+                    <div class="p-3 space-y-2">
                         <h3 class="text-lg font-bold text-platinum">{{ $movie['title'] }}</h3>
 
                         <div class="space-y-2 text-sm text-platinum">

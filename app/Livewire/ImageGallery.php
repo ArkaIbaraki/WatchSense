@@ -9,9 +9,16 @@ class ImageGallery extends Component
 {
     public $movies = [];
     public $loading = true;
+    public $search = '';
 
     public function mount()
     {
+        $this->fetchMovies();
+    }
+
+    public function updatedSearch()
+    {
+        $this->loading = true;
         $this->fetchMovies();
     }
 
@@ -40,14 +47,26 @@ class ImageGallery extends Component
                 }
             }
             
-            // Fetch movies
-            $response = Http::timeout(10)
-                ->withoutVerifying()
-                ->get('https://api.themoviedb.org/3/discover/movie', [
-                    'api_key' => $apiKey,
-                    'sort_by' => 'popularity.desc',
-                    'page' => 1,
-                ]);
+            // Choose endpoint based on search query
+            if (!empty($this->search)) {
+                // Use search endpoint for query
+                $response = Http::timeout(10)
+                    ->withoutVerifying()
+                    ->get('https://api.themoviedb.org/3/search/movie', [
+                        'api_key' => $apiKey,
+                        'query' => $this->search,
+                        'page' => 1,
+                    ]);
+            } else {
+                // Use discover endpoint for popular movies
+                $response = Http::timeout(10)
+                    ->withoutVerifying()
+                    ->get('https://api.themoviedb.org/3/discover/movie', [
+                        'api_key' => $apiKey,
+                        'sort_by' => 'popularity.desc',
+                        'page' => 1,
+                    ]);
+            }
             
             if (!$response->successful()) {
                 throw new \Exception('API returned status: ' . $response->status());
