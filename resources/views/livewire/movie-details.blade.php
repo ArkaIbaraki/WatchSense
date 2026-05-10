@@ -6,13 +6,20 @@
     @else
         <div class="space-y-10">
 
+            <!-- Back Button -->
+            <div class="mb-6">
+                <a href="{{ route('home') }}" class="inline-flex items-center text-platinum hover:text-ash transition">
+                    <span class="mr-2">←</span>
+                    <span>Back to Movies</span>
+                </a>
+            </div>
+
             <!-- Hero Section -->
             <div class="relative w-full h-[320px] md:h-[500px] overflow-hidden rounded-xl">
 
                 <!-- Backdrop -->
                 @if ($movie['backdrop_url'] && $movie['backdrop_url'] != 'https://image.tmdb.org/t/p/w1280')
-                    <img src="{{ $movie['backdrop_url'] }}" alt="{{ $movie['title'] }}"
-                        class="w-full h-full object-cover">
+                    <img src="{{ $movie['backdrop_url'] }}" alt="{{ $movie['title'] }}" class="w-full h-full object-cover">
                 @else
                     <div class="w-full h-full bg-off-black flex items-center justify-center">
                         <span class="text-cod-gray">No Backdrop</span>
@@ -47,13 +54,11 @@
                             <!-- Genres -->
                             <div class="flex flex-wrap gap-2">
                                 @forelse($movie['genres'] as $genre)
-                                    <span
-                                        class="bg-zinc-800 border border-zinc-700 px-3 py-1 rounded-md text-xs">
+                                    <span class="bg-zinc-800 border border-zinc-700 px-3 py-1 rounded-md text-xs">
                                         {{ $genre }}
                                     </span>
                                 @empty
-                                    <span
-                                        class="bg-zinc-800 border border-zinc-700 px-3 py-1 rounded-md text-xs">
+                                    <span class="bg-zinc-800 border border-zinc-700 px-3 py-1 rounded-md text-xs">
                                         N/A
                                     </span>
                                 @endforelse
@@ -111,13 +116,27 @@
                     Status
                 </span>
 
-                <span
-                    class="bg-zinc-800 border border-zinc-700 text-platinum text-xs px-3 py-1 rounded-full">
+                <span class="bg-zinc-800 border border-zinc-700 text-platinum text-xs px-3 py-1 rounded-full">
                     {{ $movie['status'] }}
                 </span>
 
             </div>
-            
+
+            <!-- Crew Section -->
+            @if (count($crew) > 0)
+                <div class="space-y-4">
+                    <h2 class="text-2xl font-bold text-platinum">Crew</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        @foreach ($crew as $member)
+                            <div class="space-y-2">
+                                <p class="text-platinum font-bold text-sm">{{ $member['name'] }}</p>
+                                <p class="text-gray-400 text-xs">{{ $member['job'] }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             <!-- Cast Section -->
             <div class="space-y-4">
 
@@ -130,7 +149,6 @@
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
 
                     @forelse ($cast as $actor)
-
                         <div
                             class="bg-off-black border border-ash rounded-lg overflow-hidden hover:border-platinum transition">
 
@@ -138,8 +156,7 @@
                             <div class="aspect-[2/3] overflow-hidden bg-zinc-900">
 
                                 @if ($actor['profile_path'])
-                                    <img src="{{ $actor['profile_path'] }}"
-                                        alt="{{ $actor['name'] }}"
+                                    <img src="{{ $actor['profile_path'] }}" alt="{{ $actor['name'] }}"
                                         class="w-full h-full object-cover">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center">
@@ -169,7 +186,6 @@
                         <p class="text-gray-400 col-span-full">
                             No cast available.
                         </p>
-
                     @endforelse
 
                 </div>
@@ -188,7 +204,6 @@
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
 
                     @forelse ($similarMovies as $similar)
-
                         <a href="{{ route('movie.details', ['id' => $similar['id']]) }}"
                             class="bg-off-black border border-ash rounded-lg overflow-hidden hover:border-platinum transition block">
 
@@ -196,8 +211,7 @@
                             <div class="aspect-[2/3] overflow-hidden">
 
                                 @if ($similar['poster_url'])
-                                    <img src="{{ $similar['poster_url'] }}"
-                                        alt="{{ $similar['title'] }}"
+                                    <img src="{{ $similar['poster_url'] }}" alt="{{ $similar['title'] }}"
                                         class="w-full h-full object-cover">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center bg-zinc-900">
@@ -239,7 +253,6 @@
                         <p class="text-gray-400 col-span-full">
                             No similar movies found.
                         </p>
-
                     @endforelse
 
                 </div>
