@@ -80,7 +80,7 @@
                                     {{ $movie['runtime'] % 60 }}M
                                 </span>
 
-                                <span>{{ strtoupper($movie['language']) }}</span>
+                                <span>{{ $movie['language'] }}</span>
                             </div>
 
                             <!-- Overview -->

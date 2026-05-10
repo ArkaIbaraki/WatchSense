@@ -18,7 +18,12 @@
 
                     <!-- Movie Info -->
                     <div class="p-3 space-y-2">
-                        <h3 class="text-lg font-bold text-platinum">{{ $movie['title'] }}</h3>
+                        <div>
+                            <h3 class="text-lg font-bold text-platinum">{{ $movie['title'] }}</h3>
+                            @if ($movie['original_title'] && $movie['original_title'] !== $movie['title'])
+                                <p class="text-xs text-ash italic">{{ $movie['original_title'] }}</p>
+                            @endif
+                        </div>
 
                         <div class="space-y-2 text-sm text-platinum">
                             <div class="flex justify-between">
@@ -27,7 +32,7 @@
                             </div>
                             <div class="flex justify-between">
                                 <span>Language :</span>
-                                <span>English(EN)</span>
+                                <span>{{ $movie['language'] }}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span>Rate :</span>
@@ -51,5 +56,63 @@
                 <p class="text-platinum col-span-full text-center py-12">No movies found</p>
             @endforelse
         </div>
+    @endif
+
+    <!-- Pagination -->
+    @if (!$loading && count($movies) > 0)
+        <div class="flex justify-center items-center gap-2 mt-8 mb-4">
+            <!-- Previous Button -->
+            @if ($currentPage > 1)
+                <button wire:click="previousPage()" class="px-3 py-2 bg-ash text-platinum rounded hover:bg-platinum hover:text-off-black transition">
+                    ← Previous
+                </button>
+            @else
+                <button disabled class="px-3 py-2 bg-gray-700 text-gray-500 rounded cursor-not-allowed">
+                    ← Previous
+                </button>
+            @endif
+
+            <!-- Page Numbers -->
+            <div class="flex gap-1">
+                @php
+                    $startPage = max(1, $currentPage - 2);
+                    $endPage = min($totalPages, $currentPage + 2);
+                @endphp
+
+                @if ($startPage > 1)
+                    <button wire:click="goToPage(1)" class="px-3 py-2 bg-off-black border border-ash text-platinum rounded hover:border-platinum transition">1</button>
+                    @if ($startPage > 2)
+                        <span class="px-2 py-2 text-platinum">...</span>
+                    @endif
+                @endif
+
+                @for ($i = $startPage; $i <= $endPage; $i++)
+                    @if ($i === $currentPage)
+                        <button class="px-3 py-2 bg-platinum text-off-black rounded font-bold">{{ $i }}</button>
+                    @else
+                        <button wire:click="goToPage({{ $i }})" class="px-3 py-2 bg-off-black border border-ash text-platinum rounded hover:border-platinum transition">{{ $i }}</button>
+                    @endif
+                @endfor
+
+                @if ($endPage < $totalPages)
+                    @if ($endPage < $totalPages - 1)
+                        <span class="px-2 py-2 text-platinum">...</span>
+                    @endif
+                    <button wire:click="goToPage({{ $totalPages }})" class="px-3 py-2 bg-off-black border border-ash text-platinum rounded hover:border-platinum transition">{{ $totalPages }}</button>
+                @endif
+            </div>
+
+            <!-- Next Button -->
+            @if ($currentPage < $totalPages)
+                <button wire:click="nextPage()" class="px-3 py-2 bg-ash text-platinum rounded hover:bg-platinum hover:text-off-black transition">
+                    Next →
+                </button>
+            @else
+                <button disabled class="px-3 py-2 bg-gray-700 text-gray-500 rounded cursor-not-allowed">
+                    Next →
+                </button>
+            @endif
+        </div>
+        <p class="text-center text-ash text-sm">Page {{ $currentPage }} of {{ $totalPages }}</p>
     @endif
 </div>
