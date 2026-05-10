@@ -25,31 +25,32 @@ class ImageGallery extends Component
     public function fetchMovies()
     {
         try {
-            // Get API key from env, with fallback
+            // Get API key from env
             $apiKey = $_ENV['TMDB_API_KEY'] ?? env('TMDB_API_KEY');
-            
+
             if (!$apiKey) {
                 throw new \Exception('TMDB_API_KEY not configured');
             }
-            
-            // Fetch genres first
+
+            // Fetch genres
             $genresResponse = Http::timeout(10)
                 ->withoutVerifying()
                 ->get('https://api.themoviedb.org/3/genre/movie/list', [
                     'api_key' => $apiKey,
                 ]);
-            
+
             $genreData = $genresResponse->json();
+
             $genreMap = [];
+
             if (isset($genreData['genres'])) {
                 foreach ($genreData['genres'] as $genre) {
                     $genreMap[$genre['id']] = $genre['name'];
                 }
             }
-            
-            // Choose endpoint based on search query
+
+            // Search or Discover
             if (!empty($this->search)) {
-                // Use search endpoint for query
                 $response = Http::timeout(10)
                     ->withoutVerifying()
                     ->get('https://api.themoviedb.org/3/search/movie', [
@@ -58,7 +59,6 @@ class ImageGallery extends Component
                         'page' => 1,
                     ]);
             } else {
-                // Use discover endpoint for popular movies
                 $response = Http::timeout(10)
                     ->withoutVerifying()
                     ->get('https://api.themoviedb.org/3/discover/movie', [
@@ -67,30 +67,32 @@ class ImageGallery extends Component
                         'page' => 1,
                     ]);
             }
-            
+
             if (!$response->successful()) {
                 throw new \Exception('API returned status: ' . $response->status());
             }
-            
+
             $data = $response->json();
-            
+
             if (!isset($data['results']) || empty($data['results'])) {
-                \Log::warning('TMDb API returned empty results', $data);
                 $this->movies = [];
                 $this->loading = false;
                 return;
             }
-            
-            // Format movies with image URLs and genres
+
+            // Format Movies
             $this->movies = collect($data['results'])->map(function ($movie) use ($genreMap) {
+
                 $genres = [];
+
                 if (isset($movie['genre_ids'])) {
                     $genres = array_map(function ($genreId) use ($genreMap) {
                         return $genreMap[$genreId] ?? 'Unknown';
-                    }, array_slice($movie['genre_ids'], 0, 2)); // Get first 2 genres
+                    }, array_slice($movie['genre_ids'], 0, 2));
                 }
-                
+
                 return [
+                    'id' => $movie['id'] ?? null,
                     'title' => $movie['title'] ?? 'Unknown',
                     'poster_url' => 'https://image.tmdb.org/t/p/w500' . ($movie['poster_path'] ?? ''),
                     'backdrop_url' => 'https://image.tmdb.org/t/p/w1280' . ($movie['backdrop_path'] ?? ''),
@@ -100,11 +102,13 @@ class ImageGallery extends Component
                     'genres' => $genres,
                 ];
             })->toArray();
-            
-            \Log::info('Successfully fetched ' . count($this->movies) . ' movies from TMDb');
+
             $this->loading = false;
+
         } catch (\Exception $e) {
+
             \Log::error('TMDb API Error: ' . $e->getMessage());
+
             $this->movies = [];
             $this->loading = false;
         }

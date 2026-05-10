@@ -14,6 +14,8 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', fn() => view('auth.register'))->name('register');
 });
 
+Route::get('/movie/{id}', fn($id) => view('movie-details', ['movieId' => $id]))->name('movie.details');
+
 // Protected Routes (only for authenticated users)
 Route::middleware('auth')->group(function () {
     Route::get('/profile', fn() => view('profile'))->name('profile');

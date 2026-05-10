@@ -4,7 +4,8 @@
     @else
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
             @forelse($movies as $movie)
-                <div class="bg-off-black rounded-lg overflow-hidden border border-ash hover:border-platinum transition">
+                <a href="{{ route('movie.details', ['id' => $movie['id']]) }}"
+                    class="bg-off-black rounded-lg overflow-hidden border border-ash hover:border-platinum transition cursor-pointer hover:shadow-lg hover:shadow-platinum/50 block">
                     <!-- Poster Image -->
                     <div class="w-full aspect-[2/3] flex items-center justify-center overflow-hidden">
                         @if ($movie['poster_url'] && $movie['poster_url'] != 'https://image.tmdb.org/t/p/w500')
@@ -45,7 +46,7 @@
                             @endforelse
                         </div>
                     </div>
-                </div>
+                </a>
             @empty
                 <p class="text-platinum col-span-full text-center py-12">No movies found</p>
             @endforelse
