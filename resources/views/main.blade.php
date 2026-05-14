@@ -1,7 +1,3 @@
-@extends('layouts.app')
-
-@section('title', 'Welcome')
-
-@section('content')
-    @livewire('gallery-section')
-@endsection
+@php
+    redirect()->route('gallery.index')->send();
+@endphp

@@ -12,7 +12,6 @@ class MovieDetails extends Component
     public $loading = true;
     public $cast = [];
     public $crew = [];
-    public $similarMovies = [];
 
     private $languageMap = [
         'aa' => 'Afar',
@@ -279,27 +278,8 @@ class MovieDetails extends Component
                 })->take(6)->toArray();
             }
             
-            // Fetch similar movies
-            $similarResponse = Http::timeout(10)
-                ->withoutVerifying()
-                ->get("https://api.themoviedb.org/3/movie/{$this->movieId}/similar", [
-                    'api_key' => $apiKey,
-                ]);
-            
-            if ($similarResponse->successful()) {
-                $similarData = $similarResponse->json();
-                
-                $this->similarMovies = collect($similarData['results'] ?? [])->take(8)->map(function ($movie) {
-                    return [
-                        'id' => $movie['id'] ?? null,
-                        'title' => $movie['title'] ?? 'Unknown',
-                        'poster_url' => 'https://image.tmdb.org/t/p/w300' . ($movie['poster_path'] ?? ''),
-                        'rating' => $movie['vote_average'] ?? 0,
-                        'release_date' => $movie['release_date'] ?? 'N/A',
-                        'runtime' => $movie['runtime'] ?? 0,
-                    ];
-                })->toArray();
-            }
+            // Recommendations are now handled by RecommendedMovies component
+            // using the weighted graph algorithm based on user preferences
             
             $this->loading = false;
         } catch (\Exception $e) {

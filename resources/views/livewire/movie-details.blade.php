@@ -19,7 +19,8 @@
 
                 <!-- Backdrop -->
                 @if ($movie['backdrop_url'] && $movie['backdrop_url'] != 'https://image.tmdb.org/t/p/w1280')
-                    <img src="{{ $movie['backdrop_url'] }}" alt="{{ $movie['title'] }}" class="w-full h-full object-cover">
+                    <img src="{{ $movie['backdrop_url'] }}" alt="{{ $movie['title'] }}"
+                        class="w-full h-full object-cover">
                 @else
                     <div class="w-full h-full bg-off-black flex items-center justify-center">
                         <span class="text-cod-gray">No Backdrop</span>
@@ -192,72 +193,8 @@
 
             </div>
 
-            <!-- Similar Movies -->
-            <div class="space-y-4">
-
-                <div class="flex items-center justify-between">
-                    <h2 class="text-2xl font-bold text-platinum">
-                        More Like This
-                    </h2>
-                </div>
-
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-
-                    @forelse ($similarMovies as $similar)
-                        <a href="{{ route('movie.details', ['id' => $similar['id']]) }}"
-                            class="bg-off-black border border-ash rounded-lg overflow-hidden hover:border-platinum transition block">
-
-                            <!-- Poster -->
-                            <div class="aspect-[2/3] overflow-hidden">
-
-                                @if ($similar['poster_url'])
-                                    <img src="{{ $similar['poster_url'] }}" alt="{{ $similar['title'] }}"
-                                        class="w-full h-full object-cover">
-                                @else
-                                    <div class="w-full h-full flex items-center justify-center bg-zinc-900">
-                                        <span class="text-cod-gray text-sm">No Image</span>
-                                    </div>
-                                @endif
-
-                            </div>
-
-                            <!-- Info -->
-                            <div class="p-3 space-y-2">
-
-                                <h3 class="text-platinum font-semibold text-sm line-clamp-1">
-                                    {{ $similar['title'] }}
-                                </h3>
-
-                                <div class="text-xs text-gray-400">
-                                    {{ $similar['release_date'] }}
-                                </div>
-
-                                <div class="flex items-center justify-between text-xs">
-
-                                    <span class="text-gray-400">
-                                        Rating
-                                    </span>
-
-                                    <span class="text-cyan-400">
-                                        {{ number_format($similar['rating'], 1) }}
-                                    </span>
-
-                                </div>
-
-                            </div>
-
-                        </a>
-
-                    @empty
-
-                        <p class="text-gray-400 col-span-full">
-                            No similar movies found.
-                        </p>
-                    @endforelse
-
-                </div>
-
-            </div>
+            <!-- Recommended Movies (Using Weighted Graph) -->
+            <livewire:recommended-movies :filmId="$movieId" />
 
         </div>
     @endif

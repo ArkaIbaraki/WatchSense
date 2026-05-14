@@ -1,18 +1,12 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Http\Controllers;
 
-use Livewire\Component;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
-class ImageGallery extends Component
+class GalleryController extends Controller
 {
-    public $movies = [];
-    public $loading = true;
-    public $search = '';
-    public $currentPage = 1;
-    public $totalPages = 1;
-
     private $languageMap = [
         'aa' => 'Afar',
         'ab' => 'Abkhazian',
@@ -200,53 +194,22 @@ class ImageGallery extends Component
         'yo' => 'Yoruba',
         'za' => 'Zhuang',
         'zu' => 'Zulu',
-        // Additional/Extended codes
         'cn' => 'Cantonese',
         'mul' => 'Multiple Languages',
         'xx' => 'No Language',
         'zxx' => 'No Linguistic Content',
     ];
 
-    public function mount()
-    {
-        $this->fetchMovies();
-    }
-
-    public function updatedSearch()
-    {
-        $this->currentPage = 1;
-        $this->loading = true;
-        $this->fetchMovies();
-    }
-
-    public function goToPage($page)
-    {
-        if ($page >= 1 && $page <= $this->totalPages) {
-            $this->currentPage = $page;
-            $this->loading = true;
-            $this->fetchMovies();
-        }
-    }
-
-    public function nextPage()
-    {
-        $this->goToPage($this->currentPage + 1);
-    }
-
-    public function previousPage()
-    {
-        $this->goToPage($this->currentPage - 1);
-    }
-
-    public function fetchMovies()
+    public function index(Request $request)
     {
         try {
-            // Get API key from env
-            $apiKey = $_ENV['TMDB_API_KEY'] ?? env('TMDB_API_KEY');
-
+            $apiKey = env('TMDB_API_KEY');
             if (!$apiKey) {
                 throw new \Exception('TMDB_API_KEY not configured');
             }
+
+            $search = $request->input('search', '');
+            $page = $request->input('page', 1);
 
             // Fetch genres
             $genresResponse = Http::timeout(10)
@@ -256,7 +219,6 @@ class ImageGallery extends Component
                 ]);
 
             $genreData = $genresResponse->json();
-
             $genreMap = [];
 
             if (isset($genreData['genres'])) {
@@ -266,13 +228,13 @@ class ImageGallery extends Component
             }
 
             // Search or Discover
-            if (!empty($this->search)) {
+            if (!empty($search)) {
                 $response = Http::timeout(10)
                     ->withoutVerifying()
                     ->get('https://api.themoviedb.org/3/search/movie', [
                         'api_key' => $apiKey,
-                        'query' => $this->search,
-                        'page' => $this->currentPage,
+                        'query' => $search,
+                        'page' => $page,
                     ]);
             } else {
                 $response = Http::timeout(10)
@@ -280,7 +242,7 @@ class ImageGallery extends Component
                     ->get('https://api.themoviedb.org/3/discover/movie', [
                         'api_key' => $apiKey,
                         'sort_by' => 'popularity.desc',
-                        'page' => $this->currentPage,
+                        'page' => $page,
                     ]);
             }
 
@@ -290,55 +252,53 @@ class ImageGallery extends Component
 
             $data = $response->json();
 
-            $this->totalPages = $data['total_pages'] ?? 1;
+            $movies = [];
+            if (isset($data['results']) && !empty($data['results'])) {
+                $movies = collect($data['results'])->map(function ($movie) use ($genreMap) {
+                    $genres = [];
+                    if (isset($movie['genre_ids'])) {
+                        $genres = array_map(function ($genreId) use ($genreMap) {
+                            return $genreMap[$genreId] ?? 'Unknown';
+                        }, array_slice($movie['genre_ids'], 0));
+                    }
 
-            if (!isset($data['results']) || empty($data['results'])) {
-                $this->movies = [];
-                $this->loading = false;
-                return;
+                    $languageCode = $movie['original_language'] ?? 'unknown';
+                    $languageName = $this->languageMap[$languageCode] ?? ucfirst($languageCode);
+
+                    return [
+                        'id' => $movie['id'] ?? null,
+                        'title' => $movie['title'] ?? 'Unknown',
+                        'original_title' => $movie['original_title'] ?? $movie['title'] ?? 'Unknown',
+                        'poster_url' => 'https://image.tmdb.org/t/p/w500' . ($movie['poster_path'] ?? ''),
+                        'backdrop_url' => 'https://image.tmdb.org/t/p/w1280' . ($movie['backdrop_path'] ?? ''),
+                        'rating' => $movie['vote_average'] ?? 0,
+                        'overview' => $movie['overview'] ?? 'No overview available',
+                        'release_date' => $movie['release_date'] ?? 'N/A',
+                        'language' => $languageName,
+                        'genres' => $genres,
+                    ];
+                })->toArray();
             }
 
-            // Format Movies
-            $this->movies = collect($data['results'])->map(function ($movie) use ($genreMap) {
+            $totalPages = $data['total_pages'] ?? 1;
+            $currentPage = $page;
 
-                $genres = [];
-
-                if (isset($movie['genre_ids'])) {
-                    $genres = array_map(function ($genreId) use ($genreMap) {
-                        return $genreMap[$genreId] ?? 'Unknown';
-                    }, array_slice($movie['genre_ids'], 0));
-                }
-
-                $languageCode = $movie['original_language'] ?? 'unknown';
-                $languageName = $this->languageMap[$languageCode] ?? ucfirst($languageCode);
-
-                return [
-                    'id' => $movie['id'] ?? null,
-                    'title' => $movie['title'] ?? 'Unknown',
-                    'original_title' => $movie['original_title'] ?? $movie['title'] ?? 'Unknown',
-                    'poster_url' => 'https://image.tmdb.org/t/p/w500' . ($movie['poster_path'] ?? ''),
-                    'backdrop_url' => 'https://image.tmdb.org/t/p/w1280' . ($movie['backdrop_path'] ?? ''),
-                    'rating' => $movie['vote_average'] ?? 0,
-                    'overview' => $movie['overview'] ?? 'No overview available',
-                    'release_date' => $movie['release_date'] ?? 'N/A',
-                    'language' => $languageName,
-                    'genres' => $genres,
-                ];
-            })->toArray();
-
-            $this->loading = false;
+            return view('gallery', [
+                'movies' => $movies,
+                'currentPage' => $currentPage,
+                'totalPages' => $totalPages,
+                'search' => $search,
+            ]);
 
         } catch (\Exception $e) {
-
-            \Log::error('TMDb API Error: ' . $e->getMessage());
-
-            $this->movies = [];
-            $this->loading = false;
+            \Log::error('Gallery Error: ' . $e->getMessage());
+            return view('gallery', [
+                'movies' => [],
+                'currentPage' => 1,
+                'totalPages' => 1,
+                'search' => '',
+                'error' => 'Failed to load movies',
+            ]);
         }
-    }
-
-    public function render()
-    {
-        return view('livewire.image-gallery');
     }
 }

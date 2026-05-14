@@ -27,20 +27,20 @@
 
 <body class="font-sans antialiased">
     <div class="min-h-screen bg-cod-gray flex">
-        <!-- Sidebar -->
-        <aside class="w-35 bg-[#131313] border-r border-off-black flex flex-col fixed h-screen">
-            <!-- Logo at Top -->
-            <div class="p-2.5 flex items-center gap-4">
-                <a href="{{ route('home') }}" class="text-xl text-center font-bold text-platinum">WatchSense</a>
-            </div>
+        <!-- Sidebar - Only show if authenticated -->
+        @auth
+            <aside class="w-35 bg-[#131313] border-r border-off-black flex flex-col fixed h-screen">
+                <!-- Logo at Top -->
+                <div class="p-2.5 flex items-center gap-4">
+                    <a href="{{ route('home') }}" class="text-xl text-center font-bold text-platinum">WatchSense</a>
+                </div>
 
-            <!-- Main Content (expands to fill space) -->
-            <nav class="flex-1 p-4">
-            </nav>
+                <!-- Main Content (expands to fill space) -->
+                <nav class="flex-1 p-4">
+                </nav>
 
-            <!-- Footer at Bottom -->
-            <div class="p-4 border-t">
-                @auth
+                <!-- Footer at Bottom -->
+                <div class="p-4 border-t">
                     <div class="space-y-2">
                         <a href="{{ route('profile') }}" class="text-platinum hover:text-gray-300 transition">
                             <div class="flex items-center justify-between bg-cod-gray rounded-lg p-3">
@@ -57,23 +57,12 @@
                             @csrf
                         </form>
                     </div>
-                @else
-                    <div class="space-y-2">
-                        <a href="{{ route('login') }}"
-                            class="block w-full bg-platinum text-cod-gray py-2 px-3 rounded-lg hover:bg-ash transition font-medium text-center text-sm">
-                            Login
-                        </a>
-                        <a href="{{ route('register') }}"
-                            class="block w-full bg-ash text-cod-gray py-2 px-3 rounded-lg hover:bg-platinum transition font-medium text-center text-sm">
-                            Register
-                        </a>
-                    </div>
-                @endauth
-            </div>
-        </aside>
+                </div>
+            </aside>
+        @endauth
 
-        <!-- Main Content -->
-        <main class="ml-52 flex-1">
+        <!-- Main Content - Adjust margin based on auth status -->
+        <main class="@auth ml-52 @endauth flex-1">
             @yield('content')
         </main>
     </div>

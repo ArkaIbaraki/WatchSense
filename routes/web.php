@@ -2,10 +2,14 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\GalleryController;
 
-// Public Routes
+// Home route - redirect based on auth status
 Route::get('/', function () {
-    return view('main');
+    if (Auth::check()) {
+        return redirect()->route('gallery.index');
+    }
+    return view('landing');
 })->name('home');
 
 // Guest Routes (only for unauthenticated users)
@@ -14,13 +18,19 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', fn() => view('auth.register'))->name('register');
 });
 
-Route::get('/movie/{id}', fn($id) => view('movie-details', ['movieId' => $id]))->name('movie.details');
-
 // Protected Routes (only for authenticated users)
 Route::middleware('auth')->group(function () {
+    // Gallery
+    Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery.index');
+    
+    // Movie browsing
+    Route::get('/movie/{id}', fn($id) => view('movie-details', ['movieId' => $id]))->name('movie.details');
+    
+    // User profile
     Route::get('/profile', fn() => view('profile'))->name('profile');
     Route::get('/dashboard', fn() => redirect()->route('profile'))->name('dashboard');
     
+    // Logout
     Route::post('/logout', function () {
         Auth::logout();
         session()->invalidate();
