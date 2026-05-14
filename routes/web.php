@@ -22,6 +22,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     // Gallery
     Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery.index');
+    Route::get('/api/search-movies', [GalleryController::class, 'searchPreview'])->name('search.preview');
     
     // Movie browsing
     Route::get('/movie/{id}', fn($id) => view('movie-details', ['movieId' => $id]))->name('movie.details');

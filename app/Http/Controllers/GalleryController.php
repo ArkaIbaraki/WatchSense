@@ -301,4 +301,82 @@ class GalleryController extends Controller
             ]);
         }
     }
+
+    public function searchPreview(Request $request)
+    {
+        try {
+            $query = $request->input('q', '');
+
+            if (strlen($query) < 1) {
+                return response()->json([]);
+            }
+
+            $apiKey = env('TMDB_API_KEY');
+            if (!$apiKey) {
+                throw new \Exception('TMDB_API_KEY not configured');
+            }
+
+            // Fetch genres for mapping
+            $genresResponse = Http::timeout(10)
+                ->withoutVerifying()
+                ->get('https://api.themoviedb.org/3/genre/movie/list', [
+                    'api_key' => $apiKey,
+                ]);
+
+            $genreData = $genresResponse->json();
+            $genreMap = [];
+
+            if (isset($genreData['genres'])) {
+                foreach ($genreData['genres'] as $genre) {
+                    $genreMap[$genre['id']] = $genre['name'];
+                }
+            }
+
+            // Search movies
+            $response = Http::timeout(10)
+                ->withoutVerifying()
+                ->get('https://api.themoviedb.org/3/search/movie', [
+                    'api_key' => $apiKey,
+                    'query' => $query,
+                    'page' => 1,
+                ]);
+
+            if (!$response->successful()) {
+                return response()->json([]);
+            }
+
+            $data = $response->json();
+            $results = [];
+
+            if (isset($data['results'])) {
+                $results = collect($data['results'])->take(8)->map(function ($movie) use ($genreMap) {
+                    $genres = [];
+                    if (isset($movie['genre_ids'])) {
+                        $genres = array_map(function ($genreId) use ($genreMap) {
+                            return $genreMap[$genreId] ?? 'Unknown';
+                        }, array_slice($movie['genre_ids'], 0, 3));
+                    }
+
+                    $languageCode = $movie['original_language'] ?? 'unknown';
+                    $languageName = $this->languageMap[$languageCode] ?? ucfirst($languageCode);
+
+                    return [
+                        'id' => $movie['id'] ?? null,
+                        'title' => $movie['title'] ?? 'Unknown',
+                        'poster_url' => 'https://image.tmdb.org/t/p/w200' . ($movie['poster_path'] ?? ''),
+                        'rating' => $movie['vote_average'] ?? 0,
+                        'release_date' => $movie['release_date'] ?? 'N/A',
+                        'language' => $languageName,
+                        'genres' => $genres,
+                    ];
+                })->toArray();
+            }
+
+            return response()->json($results);
+
+        } catch (\Exception $e) {
+            \Log::error('Search Preview Error: ' . $e->getMessage());
+            return response()->json([]);
+        }
+    }
 }
