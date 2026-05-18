@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Auth;
 
 class GalleryController extends Controller
 {
@@ -377,6 +378,72 @@ class GalleryController extends Controller
         } catch (\Exception $e) {
             \Log::error('Search Preview Error: ' . $e->getMessage());
             return response()->json([]);
+        }
+    }
+
+    public function landing()
+    {
+        // Redirect authenticated users to gallery
+        if (Auth::check()) {
+            return redirect()->route('gallery.index');
+        }
+
+        try {
+            // Fetch genres
+            $genresResponse = Http::timeout(10)->withoutVerifying()->get(
+                'https://api.themoviedb.org/3/genre/movie/list?api_key=' . env('TMDB_API_KEY')
+            );
+            $genreMap = [];
+            if ($genresResponse->successful()) {
+                $genreData = $genresResponse->json();
+                if (isset($genreData['genres'])) {
+                    foreach ($genreData['genres'] as $genre) {
+                        $genreMap[$genre['id']] = $genre['name'];
+                    }
+                }
+            }
+
+            // Fetch trending movies
+            $response = Http::timeout(10)->withoutVerifying()->get(
+                'https://api.themoviedb.org/3/trending/movie/week?api_key=' . env('TMDB_API_KEY')
+            );
+
+            $trendingMovie = null;
+            if ($response->successful()) {
+                $data = $response->json();
+                if (isset($data['results']) && count($data['results']) > 0) {
+                    $movie = $data['results'][0];
+                    
+                    $genres = [];
+                    if (isset($movie['genre_ids'])) {
+                        $genres = array_map(function ($genreId) use ($genreMap) {
+                            return $genreMap[$genreId] ?? 'Unknown';
+                        }, array_slice($movie['genre_ids'], 0, 3));
+                    }
+
+                    $languageCode = $movie['original_language'] ?? 'unknown';
+                    $languageName = $this->languageMap[$languageCode] ?? ucfirst($languageCode);
+
+                    $trendingMovie = [
+                        'id' => $movie['id'] ?? null,
+                        'title' => $movie['title'] ?? 'Unknown',
+                        'original_title' => $movie['original_title'] ?? $movie['title'] ?? 'Unknown',
+                        'poster_url' => 'https://image.tmdb.org/t/p/w500' . ($movie['poster_path'] ?? ''),
+                        'backdrop_url' => 'https://image.tmdb.org/t/p/w1280' . ($movie['backdrop_path'] ?? ''),
+                        'rating' => $movie['vote_average'] ?? 0,
+                        'overview' => $movie['overview'] ?? 'No overview available',
+                        'release_date' => $movie['release_date'] ?? 'N/A',
+                        'language' => $languageName,
+                        'genres' => $genres,
+                    ];
+                }
+            }
+
+            return view('landing', ['trendingMovie' => $trendingMovie]);
+
+        } catch (\Exception $e) {
+            \Log::error('Landing Error: ' . $e->getMessage());
+            return view('landing', ['trendingMovie' => null]);
         }
     }
 }

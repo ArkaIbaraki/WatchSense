@@ -6,12 +6,7 @@ use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\AuthController;
 
 // Home route - redirect based on auth status
-Route::get('/', function () {
-    if (Auth::check()) {
-        return redirect()->route('gallery.index');
-    }
-    return view('landing');
-})->name('home');
+Route::get('/', [GalleryController::class, 'landing'])->name('home');
 
 // Guest Routes (only for unauthenticated users)
 Route::middleware('guest')->group(function () {

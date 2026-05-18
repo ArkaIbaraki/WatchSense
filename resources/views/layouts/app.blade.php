@@ -26,13 +26,30 @@
 </head>
 
 <body class="font-sans antialiased">
-    <div class="min-h-screen bg-cod-gray flex">
-        <!-- Sidebar - Only show if authenticated -->
+    <div class="min-h-screen bg-cod-gray flex flex-col lg:flex-row">
+        <!-- Mobile Menu Button -->
         @auth
-            <aside class="w-35 bg-[#131313] border-r border-off-black flex flex-col fixed h-screen">
+            <button id="mobile-menu-btn"
+                class="lg:hidden fixed top-4 left-4 z-40 text-platinum bg-off-black p-2 rounded-lg">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+        @endauth
+
+        <!-- Sidebar - Hidden on mobile, visible on desktop -->
+        @auth
+            <aside id="sidebar"
+                class="fixed lg:sticky lg:top-0 w-52 bg-[#131313] border-r border-off-black flex flex-col h-screen lg:max-h-screen z-30
+                hidden lg:flex lg:h-screen transform lg:transform-none transition-transform duration-300 ease-in-out">
+                <!-- Close Button (Mobile) -->
+                {{-- <button id="close-sidebar" class="lg:hidden absolute top-4 right-4 text-platinum p-2">
+                    <i class="fas fa-times text-xl"></i>
+                </button> --}}
+
                 <!-- Logo at Top -->
-                <div class="p-2.5 flex items-center gap-4">
-                    <a href="{{ route('home') }}" class="text-xl text-center font-bold text-platinum">WatchSense</a>
+                <div class="p-4 border-t border-off-black flex justify-center">
+                    <a href="{{ route('home') }}" class="text-2xl font-bold text-platinum hover:text-teal-400 transition">
+                        WatchSense
+                    </a>
                 </div>
 
                 <!-- Main Content (expands to fill space) -->
@@ -59,10 +76,13 @@
                     </div>
                 </div>
             </aside>
+
+            <!-- Overlay for mobile menu -->
+            <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden lg:hidden"></div>
         @endauth
 
-        <!-- Main Content - Adjust margin based on auth status -->
-        <main class="@auth ml-52 @endauth flex-1">
+        <!-- Main Content - Responsive padding and margin -->
+        <main class="flex-1 w-full lg:flex-1 pt-16 lg:pt-0 px-4 lg:px-0">
             @yield('content')
         </main>
     </div>
@@ -71,6 +91,37 @@
     @livewireScripts
 
     <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const closeSidebarBtn = document.getElementById('close-sidebar');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('hidden');
+                sidebarOverlay.classList.toggle('hidden');
+                mobileMenuBtn.classList.toggle('hidden');
+            });
+        }
+
+        if (closeSidebarBtn) {
+            closeSidebarBtn.addEventListener('click', () => {
+                sidebar.classList.add('hidden');
+                sidebarOverlay.classList.add('hidden');
+                mobileMenuBtn.classList.remove('hidden');
+            });
+        }
+
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.add('hidden');
+                sidebarOverlay.classList.add('hidden');
+                mobileMenuBtn.classList.remove('hidden');
+            });
+        }
+
+        // Logout functionality
         document.addEventListener('DOMContentLoaded', function() {
             const logoutBtn = document.getElementById('logout-btn');
             if (logoutBtn) {

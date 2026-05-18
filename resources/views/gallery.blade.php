@@ -3,16 +3,16 @@
 @section('title', 'Movie Gallery')
 
 @section('content')
-    <div class="py-8 px-6 space-y-6">
+    <div class="py-4 lg:py-8 px-3 lg:px-6 space-y-4 lg:space-y-6">
         <!-- Search Bar Header -->
-        <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-            <h1 class="text-3xl font-bold text-platinum">Movie List</h1>
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 lg:gap-4">
+            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-platinum">Movie List</h1>
 
             <!-- Search Form with Dropdown -->
-            <div class="w-full md:w-96 relative" id="searchContainer">
+            <div class="w-full sm:w-96 relative" id="searchContainer">
                 <div class="relative">
                     <input type="text" id="searchInput" placeholder="Search movies..."
-                        class="w-full px-4 py-2 bg-off-black border border-ash rounded-lg text-platinum placeholder-gray-500 focus:border-platinum focus:outline-none transition"
+                        class="w-full px-3 py-2 text-sm lg:text-base bg-off-black border border-ash rounded-lg text-platinum placeholder-gray-500 focus:border-platinum focus:outline-none transition"
                         autocomplete="off">
                     <button type="button"
                         class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-platinum transition">
@@ -41,7 +41,7 @@
         @endif
 
         <!-- Movies Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 lg:gap-3">
             @forelse($movies as $movie)
                 <a href="{{ route('movie.details', ['id' => $movie['id']]) }}"
                     class="bg-off-black rounded-lg overflow-hidden border border-ash hover:border-platinum transition cursor-pointer hover:shadow-lg hover:shadow-platinum/50 block">
@@ -52,66 +52,66 @@
                             <img src="{{ $movie['poster_url'] }}" alt="{{ $movie['title'] }}"
                                 class="w-full h-full object-cover">
                         @else
-                            <span class="text-cod-gray">No Image</span>
+                            <span class="text-xs text-cod-gray text-center px-2">No Image</span>
                         @endif
                     </div>
 
                     <!-- Movie Info -->
-                    <div class="p-3 space-y-2">
+                    <div class="p-2 lg:p-3 space-y-1 lg:space-y-2">
                         <div>
-                            <h3 class="text-lg font-bold text-platinum">{{ $movie['title'] }}</h3>
+                            <h3 class="text-xs sm:text-sm lg:text-lg font-bold text-platinum line-clamp-2">
+                                {{ $movie['title'] }}</h3>
                             @if ($movie['original_title'] && $movie['original_title'] !== $movie['title'])
-                                <p class="text-xs text-ash italic">{{ $movie['original_title'] }}</p>
+                                <p class="text-xs text-ash italic line-clamp-1">{{ $movie['original_title'] }}</p>
                             @endif
                         </div>
 
-                        <div class="space-y-2 text-sm text-platinum">
-                            <div class="flex justify-between">
-                                <span>Release Date :</span>
-                                <span>{{ $movie['release_date'] }}</span>
+                        <div class="space-y-1 text-xs lg:text-sm text-platinum">
+                            <div class="flex justify-between gap-2">
+                                <span class="truncate">Release Date:</span>
+                                <span class="truncate text-right">{{ $movie['release_date'] }}</span>
                             </div>
-                            <div class="flex justify-between">
-                                <span>Language :</span>
-                                <span>{{ $movie['language'] }}</span>
+                            <div class="flex justify-between gap-2">
+                                <span class="truncate">Language:</span>
+                                <span class="truncate text-right text-xs">{{ $movie['language'] }}</span>
                             </div>
-                            <div class="flex justify-between">
-                                <span>Rate :</span>
-                                <span>{{ number_format($movie['rating'], 1) }}</span>
+                            <div class="flex justify-between gap-2">
+                                <span>Rate:</span>
+                                <span class="font-bold">{{ number_format($movie['rating'], 1) }}</span>
                             </div>
                         </div>
 
                         <!-- Genre Tags -->
-                        <div class="flex flex-wrap gap-2 pt-2">
+                        <div class="flex flex-wrap gap-1 pt-1 lg:pt-2">
                             @forelse($movie['genres'] as $genre)
                                 <span
-                                    class="bg-gray-700 text-platinum px-3 py-1 rounded-full text-xs font-medium">{{ $genre }}</span>
+                                    class="bg-gray-700 text-platinum px-2 py-0.5 rounded text-xs font-medium line-clamp-1">{{ $genre }}</span>
                             @empty
-                                <span
-                                    class="bg-gray-700 text-platinum px-3 py-1 rounded-full text-xs font-medium">N/A</span>
+                                <span class="bg-gray-700 text-platinum px-2 py-0.5 rounded text-xs font-medium">N/A</span>
                             @endforelse
                         </div>
                     </div>
                 </a>
             @empty
                 <div class="col-span-full text-center py-12">
-                    <p class="text-platinum text-lg">No movies found</p>
-                    <p class="text-ash text-sm mt-2">Try adjusting your search terms</p>
+                    <p class="text-platinum text-base lg:text-lg">No movies found</p>
+                    <p class="text-ash text-xs lg:text-sm mt-2">Try adjusting your search terms</p>
                 </div>
             @endforelse
         </div>
 
         <!-- Pagination -->
         @if (count($movies) > 0)
-            <div class="flex justify-center items-center gap-2 mt-8 mb-4">
+            <div class="flex justify-center items-center gap-1 lg:gap-2 mt-6 lg:mt-8 mb-4 flex-wrap">
                 <!-- Previous Button -->
                 @if ($currentPage > 1)
                     <a href="{{ route('gallery.index', ['search' => $search, 'page' => $currentPage - 1]) }}"
-                        class="px-3 py-2 bg-ash text-platinum rounded hover:bg-platinum hover:text-off-black transition">
-                        ← Previous
-                    </a>
+                        class="px-2 lg:px-3 py-1 lg:py-2 text-xs lg:text-base bg-ash text-platinum rounded hover:bg-platinum hover:text-off-black transition">
+                        ← Prev</a>
                 @else
-                    <button disabled class="px-3 py-2 bg-gray-700 text-gray-500 rounded cursor-not-allowed">
-                        ← Previous
+                    <button disabled
+                        class="px-2 lg:px-3 py-1 lg:py-2 text-xs lg:text-base bg-gray-700 text-gray-500 rounded cursor-not-allowed">
+                        ← Prev
                     </button>
                 @endif
 
@@ -124,44 +124,45 @@
 
                     @if ($startPage > 1)
                         <a href="{{ route('gallery.index', ['search' => $search, 'page' => 1]) }}"
-                            class="px-3 py-2 bg-off-black border border-ash text-platinum rounded hover:border-platinum transition">1</a>
+                            class="px-1.5 lg:px-3 py-1 lg:py-2 text-xs lg:text-base bg-off-black border border-ash text-platinum rounded hover:border-platinum transition">1</a>
                         @if ($startPage > 2)
-                            <span class="px-2 py-2 text-platinum">...</span>
+                            <span class="px-1 text-platinum text-xs">...</span>
                         @endif
                     @endif
 
                     @for ($i = $startPage; $i <= $endPage; $i++)
                         @if ($i === $currentPage)
                             <button
-                                class="px-3 py-2 bg-platinum text-off-black rounded font-bold">{{ $i }}</button>
+                                class="px-1.5 lg:px-3 py-1 lg:py-2 text-xs lg:text-base bg-platinum text-off-black rounded font-bold">{{ $i }}</button>
                         @else
                             <a href="{{ route('gallery.index', ['search' => $search, 'page' => $i]) }}"
-                                class="px-3 py-2 bg-off-black border border-ash text-platinum rounded hover:border-platinum transition">{{ $i }}</a>
+                                class="px-1.5 lg:px-3 py-1 lg:py-2 text-xs lg:text-base bg-off-black border border-ash text-platinum rounded hover:border-platinum transition">{{ $i }}</a>
                         @endif
                     @endfor
 
                     @if ($endPage < $totalPages)
                         @if ($endPage < $totalPages - 1)
-                            <span class="px-2 py-2 text-platinum">...</span>
+                            <span class="px-1 text-platinum text-xs">...</span>
                         @endif
                         <a href="{{ route('gallery.index', ['search' => $search, 'page' => $totalPages]) }}"
-                            class="px-3 py-2 bg-off-black border border-ash text-platinum rounded hover:border-platinum transition">{{ $totalPages }}</a>
+                            class="px-1.5 lg:px-3 py-1 lg:py-2 text-xs lg:text-base bg-off-black border border-ash text-platinum rounded hover:border-platinum transition">{{ $totalPages }}</a>
                     @endif
                 </div>
 
                 <!-- Next Button -->
                 @if ($currentPage < $totalPages)
                     <a href="{{ route('gallery.index', ['search' => $search, 'page' => $currentPage + 1]) }}"
-                        class="px-3 py-2 bg-ash text-platinum rounded hover:bg-platinum hover:text-off-black transition">
+                        class="px-2 lg:px-3 py-1 lg:py-2 text-xs lg:text-base bg-ash text-platinum rounded hover:bg-platinum hover:text-off-black transition">
                         Next →
                     </a>
                 @else
-                    <button disabled class="px-3 py-2 bg-gray-700 text-gray-500 rounded cursor-not-allowed">
+                    <button disabled
+                        class="px-2 lg:px-3 py-1 lg:py-2 text-xs lg:text-base bg-gray-700 text-gray-500 rounded cursor-not-allowed">
                         Next →
                     </button>
                 @endif
             </div>
-            <p class="text-center text-ash text-sm">Page {{ $currentPage }} of {{ $totalPages }}</p>
+            <p class="text-center text-ash text-xs lg:text-sm">Page {{ $currentPage }} of {{ $totalPages }}</p>
         @endif
     </div>
 
