@@ -15,7 +15,7 @@
             </div>
 
             <!-- Hero Section -->
-            <div class="relative w-full h-[320px] md:h-[500px] overflow-hidden rounded-xl">
+            <div class="relative w-full h-[500px] md:h-[550px] overflow-hidden rounded-xl">
 
                 <!-- Backdrop -->
                 @if ($movie['backdrop_url'] && $movie['backdrop_url'] != 'https://image.tmdb.org/t/p/w1280')
@@ -32,11 +32,11 @@
 
                 <!-- Content -->
                 <div class="absolute inset-0 flex items-end">
-                    <div class="p-6 md:p-10 flex flex-col md:flex-row gap-8 w-full">
+                    <div class="p-4 md:p-10 flex flex-col md:flex-row gap-4 md:gap-8 w-full">
 
                         <!-- Poster -->
                         <div
-                            class="w-44 md:w-60 aspect-[2/3] rounded-xl overflow-hidden border border-ash shrink-0 shadow-lg">
+                            class="w-32 md:w-60 aspect-[2/3] rounded-xl overflow-hidden border border-ash shrink-0 shadow-lg">
 
                             @if ($movie['poster_url'] && $movie['poster_url'] != 'https://image.tmdb.org/t/p/w500')
                                 <img src="{{ $movie['poster_url'] }}" alt="{{ $movie['title'] }}"
@@ -50,12 +50,12 @@
                         </div>
 
                         <!-- Movie Info -->
-                        <div class="flex-1 text-platinum space-y-5">
+                        <div class="flex-1 text-platinum space-y-2">
 
                             <!-- Genres -->
-                            <div class="flex flex-wrap gap-2">
+                            <div class="flex flex-wrap gap-2 max-h-10 overflow-hidden">
                                 @forelse($movie['genres'] as $genre)
-                                    <span class="bg-zinc-800 border border-zinc-700 px-3 py-1 rounded-md text-xs">
+                                    <span class="bg-zinc-800 border border-zinc-700 px-3 py-1 rounded-md text-xs whitespace-nowrap">
                                         {{ $genre }}
                                     </span>
                                 @empty
@@ -67,13 +67,13 @@
 
                             <!-- Title -->
                             <div>
-                                <h1 class="text-3xl md:text-5xl font-bold leading-tight">
+                                <h1 class="text-xl md:text-5xl font-bold leading-tight">
                                     {{ $movie['title'] }}
                                 </h1>
                             </div>
 
                             <!-- Meta -->
-                            <div class="flex flex-wrap gap-5 text-sm text-gray-300">
+                            <div class="flex flex-wrap gap-3 md:gap-5 text-xs md:text-sm text-gray-300">
                                 <span>{{ $movie['release_date'] }}</span>
 
                                 <span>
@@ -84,19 +84,14 @@
                                 <span>{{ $movie['language'] }}</span>
                             </div>
 
-                            <!-- Overview -->
-                            <p class="max-w-4xl text-gray-200 leading-relaxed text-sm md:text-base">
-                                {{ $movie['overview'] }}
-                            </p>
-
                             <!-- Rating -->
                             <div class="flex items-center gap-4 pt-2">
 
-                                <div class="text-5xl font-bold text-cyan-400">
+                                <div class="text-3xl md:text-5xl font-bold text-cyan-400">
                                     {{ number_format($movie['rating'], 1) }}
                                 </div>
 
-                                <div class="text-sm text-gray-300">
+                                <div class="text-xs md:text-sm text-gray-300">
                                     <p>Movie Rating</p>
                                     <p>{{ number_format($movie['vote_count']) }} Votes</p>
                                 </div>
@@ -125,6 +120,14 @@
                     </div>
                 </div>
 
+            </div>
+
+            <!-- Overview Section -->
+            <div class="px-2 md:px-0">
+                <h2 class="text-lg md:text-2xl font-bold text-platinum mb-4">Synopsis</h2>
+                <p class="text-gray-300 leading-relaxed text-sm md:text-base">
+                    {{ $movie['overview'] }}
+                </p>
             </div>
 
             <!-- Status -->
@@ -209,10 +212,6 @@
                 </div>
 
             </div>
-
-            <!-- Recommended Movies (Using Weighted Graph) -->
-            <livewire:recommended-movies :filmId="$movieId" />
-
         </div>
     @endif
 </div>

@@ -228,7 +228,7 @@ class MovieDetails extends Component
     public function fetchMovieDetails()
     {
         try {
-            $apiKey = $_ENV['TMDB_API_KEY'] ?? env('TMDB_API_KEY');
+            $apiKey = config('services.tmdb.api_key');
 
             if (!$apiKey) {
                 throw new \Exception('TMDB_API_KEY not configured');

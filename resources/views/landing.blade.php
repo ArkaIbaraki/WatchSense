@@ -166,11 +166,6 @@
                                         </div>
                                     </div>
                                 @endif
-                                <div class="mb-3">
-                                    @if ($trendingMovie)
-                                        <span class="inline-block text-xs font-semibold bg-teal-600/30 text-teal-300 px-2 py-1 rounded-full border border-teal-600/50 mb-2">🔥 Trending This Week</span>
-                                    @endif
-                                </div>
                                 <div class="flex justify-between items-center mb-2">
                                     <h4 class="text-white font-bold text-xl">
                                         {{ $trendingMovie ? $trendingMovie['title'] : 'Latest Releases' }}</h4>
