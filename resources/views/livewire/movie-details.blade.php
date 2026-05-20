@@ -103,6 +103,23 @@
 
                             </div>
 
+                            <!-- Like Button -->
+                                <div class="pt-4">
+                                    <button
+                                        wire:click="toggleLike"
+                                        class="px-5 py-2 rounded-lg border transition
+                                        {{ $isLiked
+                                            ? 'bg-red-500 border-red-500 text-white'
+                                            : 'bg-zinc-800 border-zinc-700 text-platinum hover:border-red-500' }}">
+
+                                        @if($isLiked)
+                                            ❤️ Liked
+                                        @else
+                                            🤍 Like Movie
+                                        @endif
+
+                                    </button>
+                                </div>
                         </div>
 
                     </div>

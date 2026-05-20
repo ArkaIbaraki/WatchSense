@@ -3,6 +3,8 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use App\Models\UserMovieLike;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 
 class MovieDetails extends Component
@@ -12,6 +14,9 @@ class MovieDetails extends Component
     public $loading = true;
     public $cast = [];
     public $crew = [];
+
+    // LIKE STATUS
+    public $isLiked = false;
 
     private $languageMap = [
         'aa' => 'Afar',
@@ -200,7 +205,6 @@ class MovieDetails extends Component
         'yo' => 'Yoruba',
         'za' => 'Zhuang',
         'zu' => 'Zulu',
-        // Additional/Extended codes
         'cn' => 'Cantonese',
         'mul' => 'Multiple Languages',
         'xx' => 'No Language',
@@ -210,6 +214,14 @@ class MovieDetails extends Component
     public function mount($movieId)
     {
         $this->movieId = $movieId;
+
+        // CHECK LIKE STATUS
+        if (Auth::check()) {
+            $this->isLiked = UserMovieLike::where('user_id', Auth::id())
+                ->where('film_id', $this->movieId)
+                ->exists();
+        }
+
         $this->fetchMovieDetails();
     }
 
@@ -217,24 +229,23 @@ class MovieDetails extends Component
     {
         try {
             $apiKey = $_ENV['TMDB_API_KEY'] ?? env('TMDB_API_KEY');
-            
+
             if (!$apiKey) {
                 throw new \Exception('TMDB_API_KEY not configured');
             }
-            
-            // Fetch main movie details
+
             $response = Http::timeout(10)
                 ->withoutVerifying()
                 ->get("https://api.themoviedb.org/3/movie/{$this->movieId}", [
                     'api_key' => $apiKey,
                 ]);
-            
+
             if (!$response->successful()) {
                 throw new \Exception('Failed to fetch movie details');
             }
-            
+
             $data = $response->json();
-            
+
             $this->movie = [
                 'id' => $data['id'] ?? null,
                 'title' => $data['title'] ?? 'Unknown',
@@ -251,40 +262,69 @@ class MovieDetails extends Component
                 'language' => $this->languageMap[$data['original_language'] ?? 'en'] ?? ucfirst($data['original_language'] ?? 'Unknown'),
                 'vote_count' => $data['vote_count'] ?? 0,
             ];
-            
-            // Fetch cast and crew
+
             $creditsResponse = Http::timeout(10)
                 ->withoutVerifying()
                 ->get("https://api.themoviedb.org/3/movie/{$this->movieId}/credits", [
                     'api_key' => $apiKey,
                 ]);
-            
+
             if ($creditsResponse->successful()) {
                 $creditsData = $creditsResponse->json();
-                
-                // Get cast (first 8)
+
                 $this->cast = collect($creditsData['cast'] ?? [])->take(8)->map(function ($actor) {
                     return [
                         'id' => $actor['id'] ?? null,
                         'name' => $actor['name'] ?? 'Unknown',
                         'character' => $actor['character'] ?? 'Unknown',
-                        'profile_path' => $actor['profile_path'] ? 'https://image.tmdb.org/t/p/w300' . $actor['profile_path'] : null,
+                        'profile_path' => $actor['profile_path']
+                            ? 'https://image.tmdb.org/t/p/w300' . $actor['profile_path']
+                            : null,
                     ];
                 })->toArray();
-                
-                // Get crew (directors, writers, producers, etc.)
+
                 $this->crew = collect($creditsData['crew'] ?? [])->filter(function ($member) {
-                    return in_array($member['job'], ['Director', 'Writer', 'Screenplay', 'Producer', 'Cinematography', 'Original Music Composer']);
+                    return in_array($member['job'], [
+                        'Director',
+                        'Writer',
+                        'Screenplay',
+                        'Producer',
+                        'Cinematography',
+                        'Original Music Composer'
+                    ]);
                 })->take(6)->toArray();
             }
-            
-            // Recommendations are now handled by RecommendedMovies component
-            // using the weighted graph algorithm based on user preferences
-            
+
             $this->loading = false;
+
         } catch (\Exception $e) {
             \Log::error('Failed to fetch movie details: ' . $e->getMessage());
             $this->loading = false;
+        }
+    }
+
+    // LIKE / UNLIKE MOVIE
+    public function toggleLike()
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        $like = UserMovieLike::where('user_id', Auth::id())
+            ->where('film_id', $this->movieId)
+            ->first();
+
+        if ($like) {
+            $like->delete();
+            $this->isLiked = false;
+        } else {
+            UserMovieLike::create([
+                'user_id' => Auth::id(),
+                'film_id' => $this->movieId,
+                'is_liked' => true,
+            ]);
+
+            $this->isLiked = true;
         }
     }
 
