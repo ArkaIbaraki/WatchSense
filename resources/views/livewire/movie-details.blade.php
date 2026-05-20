@@ -55,7 +55,8 @@
                             <!-- Genres -->
                             <div class="flex flex-wrap gap-2 max-h-10 overflow-hidden">
                                 @forelse($movie['genres'] as $genre)
-                                    <span class="bg-zinc-800 border border-zinc-700 px-3 py-1 rounded-md text-xs whitespace-nowrap">
+                                    <span
+                                        class="bg-zinc-800 border border-zinc-700 px-3 py-1 rounded-md text-xs whitespace-nowrap">
                                         {{ $genre }}
                                     </span>
                                 @empty
@@ -99,22 +100,21 @@
                             </div>
 
                             <!-- Like Button -->
-                                <div class="pt-4">
-                                    <button
-                                        wire:click="toggleLike"
-                                        class="px-5 py-2 rounded-lg border transition
+                            <div class="pt-4">
+                                <button wire:click="toggleLike"
+                                    class="px-5 py-2 rounded-lg border transition
                                         {{ $isLiked
                                             ? 'bg-red-500 border-red-500 text-white'
                                             : 'bg-zinc-800 border-zinc-700 text-platinum hover:border-red-500' }}">
 
-                                        @if($isLiked)
-                                            ❤️ Liked
-                                        @else
-                                            🤍 Like Movie
-                                        @endif
+                                    @if ($isLiked)
+                                        ❤️ Liked
+                                    @else
+                                        🤍 Like Movie
+                                    @endif
 
-                                    </button>
-                                </div>
+                                </button>
+                            </div>
                         </div>
 
                     </div>
