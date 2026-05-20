@@ -37,6 +37,7 @@ return [
 
     'tmdb' => [
         'api_key' => env('TMDB_API_KEY'),
+        'cache_ttl' => 3600, // Cache API responses for 1 hour
     ],
 
 ];

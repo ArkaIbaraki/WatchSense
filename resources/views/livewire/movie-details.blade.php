@@ -212,6 +212,10 @@
                 </div>
 
             </div>
+            <!-- Recommended Movies Section -->
+            <div class="mt-16">
+                @livewire('RecommendedMovies', ['filmId' => $movie['id']])
+            </div>
         </div>
     @endif
 </div>

@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\UserMovieLike;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 class MovieDetails extends Component
 {
@@ -15,7 +16,6 @@ class MovieDetails extends Component
     public $cast = [];
     public $crew = [];
 
-    // LIKE STATUS
     public $isLiked = false;
 
     private $languageMap = [
@@ -215,10 +215,11 @@ class MovieDetails extends Component
     {
         $this->movieId = $movieId;
 
-        // CHECK LIKE STATUS
         if (Auth::check()) {
+
             $this->isLiked = UserMovieLike::where('user_id', Auth::id())
                 ->where('film_id', $this->movieId)
+                ->where('is_liked', true)
                 ->exists();
         }
 
@@ -228,104 +229,240 @@ class MovieDetails extends Component
     public function fetchMovieDetails()
     {
         try {
+
             $apiKey = config('services.tmdb.api_key');
 
             if (!$apiKey) {
-                throw new \Exception('TMDB_API_KEY not configured');
+                throw new \Exception('TMDB API Key missing');
             }
 
-            $response = Http::timeout(10)
-                ->withoutVerifying()
-                ->get("https://api.themoviedb.org/3/movie/{$this->movieId}", [
-                    'api_key' => $apiKey,
-                ]);
+            $cacheTtl = 3600;
 
-            if (!$response->successful()) {
-                throw new \Exception('Failed to fetch movie details');
-            }
+            // Movie Details
 
-            $data = $response->json();
+            $data = Cache::remember(
+                "movie.details.{$this->movieId}",
+                $cacheTtl,
+                function () use ($apiKey) {
+
+                    $response = Http::timeout(10)
+                        ->withoutVerifying()
+                        ->get(
+                            "https://api.themoviedb.org/3/movie/{$this->movieId}",
+                            [
+                                'api_key' => $apiKey,
+                            ]
+                        );
+
+                    if (!$response->successful()) {
+                        throw new \Exception('Failed fetch movie details');
+                    }
+
+                    return $response->json();
+                }
+            );
 
             $this->movie = [
                 'id' => $data['id'] ?? null,
                 'title' => $data['title'] ?? 'Unknown',
-                'poster_url' => 'https://image.tmdb.org/t/p/w500' . ($data['poster_path'] ?? ''),
-                'backdrop_url' => 'https://image.tmdb.org/t/p/w1280' . ($data['backdrop_path'] ?? ''),
+
+                'poster_url' => $data['poster_path']
+                    ? 'https://image.tmdb.org/t/p/w500' . $data['poster_path']
+                    : null,
+
+                'backdrop_url' => $data['backdrop_path']
+                    ? 'https://image.tmdb.org/t/p/w1280' . $data['backdrop_path']
+                    : null,
+
                 'rating' => $data['vote_average'] ?? 0,
+
                 'overview' => $data['overview'] ?? 'No overview available',
+
                 'release_date' => $data['release_date'] ?? 'N/A',
+
                 'runtime' => $data['runtime'] ?? 0,
-                'genres' => collect($data['genres'] ?? [])->pluck('name')->toArray(),
+
+                'genres' => collect($data['genres'] ?? [])
+                    ->pluck('name')
+                    ->toArray(),
+
                 'status' => $data['status'] ?? 'Unknown',
+
                 'budget' => $data['budget'] ?? 0,
+
                 'revenue' => $data['revenue'] ?? 0,
-                'language' => $this->languageMap[$data['original_language'] ?? 'en'] ?? ucfirst($data['original_language'] ?? 'Unknown'),
+
                 'vote_count' => $data['vote_count'] ?? 0,
+
+                'language' => $this->languageMap[
+                    $data['original_language'] ?? 'en'
+                ] ?? strtoupper($data['original_language'] ?? 'N/A'),
             ];
 
-            $creditsResponse = Http::timeout(10)
-                ->withoutVerifying()
-                ->get("https://api.themoviedb.org/3/movie/{$this->movieId}/credits", [
-                    'api_key' => $apiKey,
-                ]);
+            /*
+            |--------------------------------------------------------------------------
+            | Credits
+            |--------------------------------------------------------------------------
+            */
 
-            if ($creditsResponse->successful()) {
-                $creditsData = $creditsResponse->json();
+            $credits = Cache::remember(
+                "movie.credits.{$this->movieId}",
+                $cacheTtl,
+                function () use ($apiKey) {
 
-                $this->cast = collect($creditsData['cast'] ?? [])->take(8)->map(function ($actor) {
+                    $response = Http::timeout(10)
+                        ->withoutVerifying()
+                        ->get(
+                            "https://api.themoviedb.org/3/movie/{$this->movieId}/credits",
+                            [
+                                'api_key' => $apiKey,
+                            ]
+                        );
+
+                    if (!$response->successful()) {
+                        return [
+                            'cast' => [],
+                            'crew' => [],
+                        ];
+                    }
+
+                    return $response->json();
+                }
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Cast
+            |--------------------------------------------------------------------------
+            */
+
+            $this->cast = collect($credits['cast'] ?? [])
+                ->take(8)
+                ->map(function ($actor) {
+
                     return [
                         'id' => $actor['id'] ?? null,
                         'name' => $actor['name'] ?? 'Unknown',
                         'character' => $actor['character'] ?? 'Unknown',
+
                         'profile_path' => $actor['profile_path']
                             ? 'https://image.tmdb.org/t/p/w300' . $actor['profile_path']
                             : null,
                     ];
-                })->toArray();
+                })
+                ->toArray();
 
-                $this->crew = collect($creditsData['crew'] ?? [])->filter(function ($member) {
+            /*
+            |--------------------------------------------------------------------------
+            | Crew
+            |--------------------------------------------------------------------------
+            */
+
+            $this->crew = collect($credits['crew'] ?? [])
+                ->filter(function ($member) {
+
                     return in_array($member['job'], [
                         'Director',
                         'Writer',
-                        'Screenplay',
                         'Producer',
-                        'Cinematography',
-                        'Original Music Composer'
+                        'Screenplay',
+                        'Original Music Composer',
                     ]);
-                })->take(6)->toArray();
-            }
-
-            $this->loading = false;
+                })
+                ->take(6)
+                ->values()
+                ->toArray();
 
         } catch (\Exception $e) {
-            \Log::error('Failed to fetch movie details: ' . $e->getMessage());
-            $this->loading = false;
+
+            \Log::error(
+                'MovieDetails Error: ' . $e->getMessage()
+            );
         }
+
+        $this->loading = false;
     }
 
-    // LIKE / UNLIKE MOVIE
+    /*
+    |--------------------------------------------------------------------------
+    | Toggle Like
+    |--------------------------------------------------------------------------
+    */
+
     public function toggleLike()
     {
         if (!Auth::check()) {
             return redirect()->route('login');
         }
 
-        $like = UserMovieLike::where('user_id', Auth::id())
+        $userId = Auth::id();
+
+        /*
+        |--------------------------------------------------------------------------
+        | FIND EXISTING LIKE
+        |--------------------------------------------------------------------------
+        */
+
+        $like = UserMovieLike::where('user_id', $userId)
             ->where('film_id', $this->movieId)
             ->first();
 
+        /*
+        |--------------------------------------------------------------------------
+        | TOGGLE LIKE
+        |--------------------------------------------------------------------------
+        */
+
         if ($like) {
-            $like->delete();
-            $this->isLiked = false;
+
+            $like->update([
+                'is_liked' => !$like->is_liked
+            ]);
+
+            $this->isLiked = !$like->is_liked;
+
         } else {
+
             UserMovieLike::create([
-                'user_id' => Auth::id(),
+                'user_id' => $userId,
                 'film_id' => $this->movieId,
                 'is_liked' => true,
             ]);
 
             $this->isLiked = true;
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | CLEAR GRAPH CACHE
+        |--------------------------------------------------------------------------
+        */
+
+        Cache::forget(
+            "recommendations.user.{$userId}"
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | OPTIONAL:
+        | CLEAR MOVIE GRAPH CACHE
+        |--------------------------------------------------------------------------
+        */
+
+        Cache::forget(
+            "graph.user.likes.{$userId}"
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | REFRESH RECOMMENDATION COMPONENT
+        |--------------------------------------------------------------------------
+        */
+
+        $this->dispatch(
+            'likeToggled',
+            movieId: $this->movieId
+        );
     }
 
     public function render()

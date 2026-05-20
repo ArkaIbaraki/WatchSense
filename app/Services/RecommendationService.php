@@ -27,11 +27,22 @@ class RecommendationService
      */
     public function getRecommendationsForUser($userId, $currentFilmId, $limit = 8)
     {
-        $currentFilm = Film::findOrFail($currentFilmId);
+        // Check if film exists in database
+        $currentFilm = Film::find($currentFilmId);
+        
+        if (!$currentFilm) {
+            // Film doesn't exist in database - return empty array
+            // In a full system, you'd sync TMDb movies to database first
+            return [];
+        }
         
         // Get all films except the current one
         $allFilms = Film::where('id', '!=', $currentFilmId)
             ->get();
+
+        if ($allFilms->isEmpty()) {
+            return [];
+        }
 
         // Build weighted graph and calculate scores
         $filmScores = [];
@@ -63,6 +74,10 @@ class RecommendationService
                     'score' => $score,
                 ];
             }
+        }
+
+        if (empty($filmScores)) {
+            return [];
         }
 
         // Sort by score descending

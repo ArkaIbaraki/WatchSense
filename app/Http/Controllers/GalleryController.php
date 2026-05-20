@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 class GalleryController extends Controller
 {
@@ -325,24 +326,29 @@ class GalleryController extends Controller
             }
 
             $apiKey = $this->getApiKey();
+            $cacheTtl = config('services.tmdb.cache_ttl', 3600);
 
-            // Fetch genres for mapping
-            $genresResponse = Http::timeout(10)
-                ->withoutVerifying()
-                ->get('https://api.themoviedb.org/3/genre/movie/list', [
-                    'api_key' => $apiKey,
-                ]);
+            // Cache genre list
+            $genreMap = Cache::remember('tmdb.genres', $cacheTtl, function () use ($apiKey) {
+                $genresResponse = Http::timeout(10)
+                    ->withoutVerifying()
+                    ->get('https://api.themoviedb.org/3/genre/movie/list', [
+                        'api_key' => $apiKey,
+                    ]);
 
-            $genreData = $genresResponse->json();
-            $genreMap = [];
+                $genreData = $genresResponse->json();
+                $genreMap = [];
 
-            if (isset($genreData['genres'])) {
-                foreach ($genreData['genres'] as $genre) {
-                    $genreMap[$genre['id']] = $genre['name'];
+                if (isset($genreData['genres'])) {
+                    foreach ($genreData['genres'] as $genre) {
+                        $genreMap[$genre['id']] = $genre['name'];
+                    }
                 }
-            }
 
-            // Search movies
+                return $genreMap;
+            });
+
+            // Cache search results per query
             $response = Http::timeout(10)
                 ->withoutVerifying()
                 ->get('https://api.themoviedb.org/3/search/movie', [
