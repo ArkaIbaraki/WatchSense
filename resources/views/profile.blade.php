@@ -248,13 +248,56 @@
                         </div>
 
                         @php
-                            $likedMovies = \App\Models\UserMovieLike::with([
-                                'film.genres'
-                            ])
-                                ->where('user_id', Auth::id())
+
+                            use Illuminate\Support\Facades\Http;
+
+                            $likedMovies = \App\Models\UserMovieLike::where(
+                                'user_id',
+                                Auth::id()
+                            )
                                 ->where('is_liked', true)
                                 ->latest()
-                                ->get();
+                                ->get()
+                                ->map(function ($like) {
+
+                                $apiKey = config('services.tmdb.api_key');
+
+                                $response = Http::timeout(10)
+                                    ->withoutVerifying()
+                                    ->get(
+                                        "https://api.themoviedb.org/3/movie/{$like->film_id}",
+                                        [
+                                            'api_key' => $apiKey,
+                                        ]
+                                    );
+
+                                if (!$response->successful()) {
+                                    return null;
+                                }
+
+                                $movie = $response->json();
+
+                                return [
+
+                                    'id' => $movie['id'],
+
+                                    'title' => $movie['title'] ?? 'Unknown Movie',
+
+                                    'description' => $movie['overview'] ?? null,
+
+                                    'poster' => isset($movie['poster_path'])
+                                        ? 'https://image.tmdb.org/t/p/w500' . $movie['poster_path']
+                                        : null,
+
+                                    'genres' => collect($movie['genres'] ?? [])
+                                        ->pluck('name')
+                                        ->join(', '),
+
+                                    'liked_at' => $like->created_at,
+                                ];
+                            })
+                            ->filter();
+
                         @endphp
 
                         @if ($likedMovies->count() > 0)
@@ -269,11 +312,11 @@
                                         {{-- Poster --}}
                                         <div class="h-72 bg-black overflow-hidden">
 
-                                            @if ($movieLike->film && $movieLike->film->gambar_url)
+                                            @if ($movieLike['poster'])
 
                                                 <img
-                                                    src="{{ $movieLike->film->gambar_url }}"
-                                                    alt="{{ $movieLike->film->judul }}"
+                                                    src="{{ $movieLike['poster'] }}"
+                                                    alt="{{ $movieLike['title'] }}"
                                                     class="w-full h-full object-cover">
 
                                             @else
@@ -298,14 +341,14 @@
                                                     {{-- Title --}}
                                                     <h4
                                                         class="text-lg font-bold text-platinum line-clamp-1">
-                                                        {{ $movieLike->film->judul ?? 'Unknown Movie' }}
+                                                        {{ $movieLike['title'] ?? 'Unknown Movie' }}
                                                     </h4>
 
                                                     {{-- Genres --}}
-                                                    @if ($movieLike->film && $movieLike->film->genres->count())
+                                                    @if ($movieLike['genres'])
 
                                                         <p class="text-sm text-zinc-500 mt-1 line-clamp-1">
-                                                            {{ $movieLike->film->genres->pluck('name')->join(', ') }}
+                                                            {{ $movieLike['genres'] }}
                                                         </p>
 
                                                     @endif
@@ -331,12 +374,12 @@
                                             </div>
 
                                             {{-- Description --}}
-                                            @if ($movieLike->film && $movieLike->film->deskripsi)
+                                            @if ($movieLike['description'])
 
                                                 <p
                                                     class="text-sm text-zinc-400 mt-4 line-clamp-3 leading-relaxed">
 
-                                                    {{ $movieLike->film->deskripsi }}
+                                                    {{ $movieLike['description'] }}
 
                                                 </p>
 
@@ -348,12 +391,12 @@
 
                                                 <span class="text-xs text-zinc-500">
                                                     Liked
-                                                    {{ $movieLike->created_at->diffForHumans() }}
+                                                    {{ $movieLike['liked_at']->diffForHumans() }}
                                                 </span>
 
-                                                @if ($movieLike->film)
+                                                @if ($movieLike['id'])
 
-                                                    <a href="{{ route('movies.show', $movieLike->film->tmdb_id) }}"
+                                                    <a href="{{ route('movie.details', $movieLike['id']) }}"
                                                         class="inline-flex items-center px-4 py-2 rounded-xl bg-black border border-zinc-700 hover:bg-zinc-800 text-sm text-platinum transition duration-200">
 
                                                         View
