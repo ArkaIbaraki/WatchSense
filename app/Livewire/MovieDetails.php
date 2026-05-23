@@ -233,19 +233,24 @@ class MovieDetails extends Component
             $apiKey = config('services.tmdb.api_key');
 
             if (!$apiKey) {
-                throw new \Exception('TMDB API Key missing');
+                throw new \Exception('TMDB API KEY missing');
             }
 
-            $cacheTtl = 3600;
+            $cacheTtl = 60 * 60 * 12;
 
-            // Movie Details
+            /*
+            |--------------------------------------------------------------------------
+            | MOVIE DETAILS
+            |--------------------------------------------------------------------------
+            */
 
-            $data = Cache::remember(
-                "movie.details.{$this->movieId}",
+            $movieData = Cache::remember(
+                "movie_details_{$this->movieId}",
                 $cacheTtl,
                 function () use ($apiKey) {
 
-                    $response = Http::timeout(10)
+                    $response = Http::retry(3, 1000)
+                        ->timeout(20)
                         ->withoutVerifying()
                         ->get(
                             "https://api.themoviedb.org/3/movie/{$this->movieId}",
@@ -255,7 +260,7 @@ class MovieDetails extends Component
                         );
 
                     if (!$response->successful()) {
-                        throw new \Exception('Failed fetch movie details');
+                        throw new \Exception('Failed fetch movie');
                     }
 
                     return $response->json();
@@ -263,124 +268,145 @@ class MovieDetails extends Component
             );
 
             $this->movie = [
-                'id' => $data['id'] ?? null,
-                'title' => $data['title'] ?? 'Unknown',
+                'id' => $movieData['id'] ?? null,
 
-                'poster_url' => $data['poster_path']
-                    ? 'https://image.tmdb.org/t/p/w500' . $data['poster_path']
+                'title' => $movieData['title'] ?? 'Unknown Movie',
+
+                'poster_url' => !empty($movieData['poster_path'])
+                    ? 'https://image.tmdb.org/t/p/w500' . $movieData['poster_path']
                     : null,
 
-                'backdrop_url' => $data['backdrop_path']
-                    ? 'https://image.tmdb.org/t/p/w1280' . $data['backdrop_path']
+                'backdrop_url' => !empty($movieData['backdrop_path'])
+                    ? 'https://image.tmdb.org/t/p/w1280' . $movieData['backdrop_path']
                     : null,
 
-                'rating' => $data['vote_average'] ?? 0,
+                'rating' => $movieData['vote_average'] ?? 0,
 
-                'overview' => $data['overview'] ?? 'No overview available',
+                'overview' => $movieData['overview'] ?? 'No overview available',
 
-                'release_date' => $data['release_date'] ?? 'N/A',
+                'release_date' => $movieData['release_date'] ?? 'Unknown',
 
-                'runtime' => $data['runtime'] ?? 0,
+                'runtime' => $movieData['runtime'] ?? 0,
 
-                'genres' => collect($data['genres'] ?? [])
+                'genres' => collect($movieData['genres'] ?? [])
                     ->pluck('name')
                     ->toArray(),
 
-                'status' => $data['status'] ?? 'Unknown',
+                'status' => $movieData['status'] ?? 'Unknown',
 
-                'budget' => $data['budget'] ?? 0,
+                'budget' => $movieData['budget'] ?? 0,
 
-                'revenue' => $data['revenue'] ?? 0,
-
-                'vote_count' => $data['vote_count'] ?? 0,
+                'revenue' => $movieData['revenue'] ?? 0,
 
                 'language' => $this->languageMap[
-                    $data['original_language'] ?? 'en'
-                ] ?? strtoupper($data['original_language'] ?? 'N/A'),
+                    $movieData['original_language'] ?? 'en'
+                ] ?? 'Unknown',
+
+                'vote_count' => $movieData['vote_count'] ?? 0,
             ];
 
             /*
             |--------------------------------------------------------------------------
-            | Credits
+            | MOVIE CREDITS
             |--------------------------------------------------------------------------
             */
 
-            $credits = Cache::remember(
-                "movie.credits.{$this->movieId}",
-                $cacheTtl,
-                function () use ($apiKey) {
+            try {
 
-                    $response = Http::timeout(10)
-                        ->withoutVerifying()
-                        ->get(
-                            "https://api.themoviedb.org/3/movie/{$this->movieId}/credits",
+                $credits = Cache::remember(
+                    "movie_credits_{$this->movieId}",
+                    $cacheTtl,
+                    function () use ($apiKey) {
+
+                        $response = Http::retry(2, 1000)
+                            ->timeout(15)
+                            ->withoutVerifying()
+                            ->get(
+                                "https://api.themoviedb.org/3/movie/{$this->movieId}/credits",
+                                [
+                                    'api_key' => $apiKey,
+                                ]
+                            );
+
+                        if (!$response->successful()) {
+                            return [
+                                'cast' => [],
+                                'crew' => [],
+                            ];
+                        }
+
+                        return $response->json();
+                    }
+                );
+
+                /*
+                |--------------------------------------------------------------------------
+                | CAST
+                |--------------------------------------------------------------------------
+                */
+
+                $this->cast = collect($credits['cast'] ?? [])
+                    ->take(8)
+                    ->map(function ($actor) {
+
+                        return [
+                            'id' => $actor['id'] ?? null,
+
+                            'name' => $actor['name'] ?? 'Unknown',
+
+                            'character' => $actor['character'] ?? 'Unknown',
+
+                            'profile_path' => !empty($actor['profile_path'])
+                                ? 'https://image.tmdb.org/t/p/w300' . $actor['profile_path']
+                                : null,
+                        ];
+                    })
+                    ->toArray();
+
+                /*
+                |--------------------------------------------------------------------------
+                | CREW
+                |--------------------------------------------------------------------------
+                */
+
+                $this->crew = collect($credits['crew'] ?? [])
+                    ->filter(function ($member) {
+
+                        return in_array(
+                            $member['job'] ?? '',
                             [
-                                'api_key' => $apiKey,
+                                'Director',
+                                'Writer',
+                                'Screenplay',
+                                'Producer',
+                                'Original Music Composer',
                             ]
                         );
+                    })
+                    ->take(6)
+                    ->values()
+                    ->toArray();
 
-                    if (!$response->successful()) {
-                        return [
-                            'cast' => [],
-                            'crew' => [],
-                        ];
-                    }
+            } catch (\Exception $e) {
 
-                    return $response->json();
-                }
-            );
+                \Log::warning(
+                    'Credits fetch failed: ' . $e->getMessage()
+                );
 
-            /*
-            |--------------------------------------------------------------------------
-            | Cast
-            |--------------------------------------------------------------------------
-            */
+                $this->cast = [];
+                $this->crew = [];
+            }
 
-            $this->cast = collect($credits['cast'] ?? [])
-                ->take(8)
-                ->map(function ($actor) {
-
-                    return [
-                        'id' => $actor['id'] ?? null,
-                        'name' => $actor['name'] ?? 'Unknown',
-                        'character' => $actor['character'] ?? 'Unknown',
-
-                        'profile_path' => $actor['profile_path']
-                            ? 'https://image.tmdb.org/t/p/w300' . $actor['profile_path']
-                            : null,
-                    ];
-                })
-                ->toArray();
-
-            /*
-            |--------------------------------------------------------------------------
-            | Crew
-            |--------------------------------------------------------------------------
-            */
-
-            $this->crew = collect($credits['crew'] ?? [])
-                ->filter(function ($member) {
-
-                    return in_array($member['job'], [
-                        'Director',
-                        'Writer',
-                        'Producer',
-                        'Screenplay',
-                        'Original Music Composer',
-                    ]);
-                })
-                ->take(6)
-                ->values()
-                ->toArray();
+            $this->loading = false;
 
         } catch (\Exception $e) {
 
             \Log::error(
                 'MovieDetails Error: ' . $e->getMessage()
             );
-        }
 
-        $this->loading = false;
+            $this->loading = false;
+        }
     }
 
     /*
