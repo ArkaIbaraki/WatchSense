@@ -33,6 +33,71 @@
             </div>
         </div>
 
+        <!-- Filter Tabs -->
+        <div class="space-y-3">
+
+            <!-- Main Filter -->
+            <div class="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+
+                <a href="{{ route('gallery.index', ['type' => 'popular']) }}"
+                    class="px-4 py-2 rounded-full text-sm whitespace-nowrap transition
+            {{ ($type ?? 'popular') == 'popular'
+                ? 'bg-platinum text-off-black font-bold'
+                : 'bg-off-black border border-ash text-platinum hover:border-platinum' }}">
+                    Popular
+                </a>
+
+                <a href="{{ route('gallery.index', ['type' => 'trending']) }}"
+                    class="px-4 py-2 rounded-full text-sm whitespace-nowrap transition
+            {{ ($type ?? '') == 'trending'
+                ? 'bg-platinum text-off-black font-bold'
+                : 'bg-off-black border border-ash text-platinum hover:border-platinum' }}">
+                    Trending
+                </a>
+
+                <a href="{{ route('gallery.index', ['type' => 'top_rated']) }}"
+                    class="px-4 py-2 rounded-full text-sm whitespace-nowrap transition
+            {{ ($type ?? '') == 'top_rated'
+                ? 'bg-platinum text-off-black font-bold'
+                : 'bg-off-black border border-ash text-platinum hover:border-platinum' }}">
+                    Top Rated
+                </a>
+
+                <a href="{{ route('gallery.index', ['type' => 'upcoming']) }}"
+                    class="px-4 py-2 rounded-full text-sm whitespace-nowrap transition
+            {{ ($type ?? '') == 'upcoming'
+                ? 'bg-platinum text-off-black font-bold'
+                : 'bg-off-black border border-ash text-platinum hover:border-platinum' }}">
+                    Upcoming
+                </a>
+
+            </div>
+
+            <!-- Trending Time -->
+            @if (($type ?? 'popular') == 'trending')
+                <div class="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+
+                    <a href="{{ route('gallery.index', ['type' => 'trending', 'time' => 'day']) }}"
+                        class="px-4 py-1.5 rounded-full text-xs whitespace-nowrap transition
+                {{ ($time ?? 'day') == 'day'
+                    ? 'bg-cyan-400 text-off-black font-bold'
+                    : 'bg-off-black border border-ash text-platinum hover:border-cyan-400' }}">
+                        Today
+                    </a>
+
+                    <a href="{{ route('gallery.index', ['type' => 'trending', 'time' => 'week']) }}"
+                        class="px-4 py-1.5 rounded-full text-xs whitespace-nowrap transition
+                {{ ($time ?? '') == 'week'
+                    ? 'bg-cyan-400 text-off-black font-bold'
+                    : 'bg-off-black border border-ash text-platinum hover:border-cyan-400' }}">
+                        This Week
+                    </a>
+
+                </div>
+            @endif
+
+        </div>
+
         <!-- Error Message -->
         @if (isset($error))
             <div class="bg-red-500/20 border border-red-500 text-red-400 px-4 py-3 rounded-lg">
@@ -44,13 +109,13 @@
         <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 lg:gap-3">
             @forelse($movies as $movie)
                 <a href="{{ route('movie.details', ['id' => $movie['id']]) }}"
-                    class="bg-off-black rounded-lg overflow-hidden border border-ash hover:border-platinum transition cursor-pointer hover:shadow-lg hover:shadow-platinum/50 block">
+                    class="bg-off-black rounded-lg overflow-hidden border border-ash hover:border-platinum transition duration-300 cursor-pointer hover:shadow-lg hover:shadow-platinum/50 hover:scale-[1.02] block">
 
                     <!-- Poster Image -->
                     <div class="w-full aspect-[2/3] flex items-center justify-center overflow-hidden">
                         @if ($movie['poster_url'] && $movie['poster_url'] != 'https://image.tmdb.org/t/p/w500')
                             <img src="{{ $movie['poster_url'] }}" alt="{{ $movie['title'] }}"
-                                class="w-full h-full object-cover">
+                                class="w-full h-full object-cover transition duration-500 hover:scale-105">
                         @else
                             <span class="text-xs text-cod-gray text-center px-2">No Image</span>
                         @endif
@@ -105,7 +170,12 @@
             <div class="flex justify-center items-center gap-1 lg:gap-2 mt-6 lg:mt-8 mb-4 flex-wrap">
                 <!-- Previous Button -->
                 @if ($currentPage > 1)
-                    <a href="{{ route('gallery.index', ['search' => $search, 'page' => $currentPage - 1]) }}"
+                    <a href="{{ route('gallery.index', [
+                        'search' => $search,
+                        'page' => $currentPage - 1,
+                        'type' => $type ?? 'popular',
+                        'time' => $time ?? 'day',
+                    ]) }}"
                         class="px-2 lg:px-3 py-1 lg:py-2 text-xs lg:text-base bg-ash text-platinum rounded hover:bg-platinum hover:text-off-black transition">
                         ← Prev</a>
                 @else
@@ -135,7 +205,12 @@
                             <button
                                 class="px-1.5 lg:px-3 py-1 lg:py-2 text-xs lg:text-base bg-platinum text-off-black rounded font-bold">{{ $i }}</button>
                         @else
-                            <a href="{{ route('gallery.index', ['search' => $search, 'page' => $i]) }}"
+                            <a href="{{ route('gallery.index', [
+                                'search' => $search,
+                                'page' => $i,
+                                'type' => $type ?? 'popular',
+                                'time' => $time ?? 'day',
+                            ]) }}"
                                 class="px-1.5 lg:px-3 py-1 lg:py-2 text-xs lg:text-base bg-off-black border border-ash text-platinum rounded hover:border-platinum transition">{{ $i }}</a>
                         @endif
                     @endfor
@@ -242,7 +317,8 @@
                 e.preventDefault();
                 const query = searchInput.value.trim();
                 if (query.length > 0) {
-                    window.location.href = `{{ route('gallery.index') }}?search=${encodeURIComponent(query)}`;
+                    window.location.href =
+                        `{{ route('gallery.index') }}?search=${encodeURIComponent(query)}&type=popular`;
                 }
             }
         });

@@ -224,6 +224,9 @@ class GalleryController extends Controller
 
             $search = $request->input('search', '');
             $page = $request->input('page', 1);
+            $type = $request->input('type', 'popular');
+            $time = $request->input('time', 'day');
+
 
             // Fetch genres
             $genresResponse = Http::timeout(10)
@@ -241,8 +244,9 @@ class GalleryController extends Controller
                 }
             }
 
-            // Search or Discover
+            // Search or Dynamic Category
             if (!empty($search)) {
+
                 $response = Http::timeout(10)
                     ->withoutVerifying()
                     ->get('https://api.themoviedb.org/3/search/movie', [
@@ -250,12 +254,32 @@ class GalleryController extends Controller
                         'query' => $search,
                         'page' => $page,
                     ]);
+
             } else {
+
+                switch ($type) {
+
+                    default:
+                        $endpoint = 'https://api.themoviedb.org/3/movie/popular';
+                        break;
+
+                    case 'trending':
+                        $endpoint = "https://api.themoviedb.org/3/trending/movie/$time";
+                        break;
+
+                    case 'top_rated':
+                        $endpoint = 'https://api.themoviedb.org/3/movie/top_rated';
+                        break;
+
+                    case 'upcoming':
+                        $endpoint = 'https://api.themoviedb.org/3/movie/upcoming';
+                        break;
+                }
+
                 $response = Http::timeout(10)
                     ->withoutVerifying()
-                    ->get('https://api.themoviedb.org/3/discover/movie', [
+                    ->get($endpoint, [
                         'api_key' => $apiKey,
-                        'sort_by' => 'popularity.desc',
                         'page' => $page,
                     ]);
             }
@@ -302,6 +326,8 @@ class GalleryController extends Controller
                 'currentPage' => $currentPage,
                 'totalPages' => $totalPages,
                 'search' => $search,
+                'type' => $type,
+                'time' => $time,
             ]);
 
         } catch (\Exception $e) {
